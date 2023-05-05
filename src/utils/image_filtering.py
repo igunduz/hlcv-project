@@ -11,8 +11,8 @@ def rgb2gray(rgb):
 
 def gauss(sigma):
     
-    Gx = 1/np.sqrt(2*np.pi*sigma**2)*np.exp(-np.arange(-3*sigma,3*sigma+1)**2/(2*sigma**2))
     x = np.arange(-3*sigma,3*sigma+1)
+    Gx = 1/np.sqrt(2*np.pi*sigma**2)*np.exp(-x**2/(2*sigma**2))
     
     return Gx, x
 
@@ -28,17 +28,19 @@ def gaussianfilter(img, sigma):
 
 def gaussdx(sigma):
     
-    ### Your code here
-    
-    raise NotImplementedError
+    x = np.arange(-3*sigma,3*sigma+1)
+    D = -1/np.sqrt(2*np.pi*sigma**3)*x*np.exp(-x**2/(2*sigma**2))
     
     return D, x
 
 
 def gaussderiv(img, sigma):
-    
-    ### Your code here
-    
-    raise NotImplementedError
+
+    G, _ = gauss(sigma)
+    D, _ = gaussdx(sigma)
+    Dx = signal.convolve(img, D[np.newaxis, :], mode='same')
+    imgDx = signal.convolve(Dx, G[:, np.newaxis], mode='same')
+    Dy = signal.convolve(img, D[:, np.newaxis], mode='same')
+    imgDy = signal.convolve(Dy, G[np.newaxis, :], mode='same')
     
     return imgDx, imgDy
