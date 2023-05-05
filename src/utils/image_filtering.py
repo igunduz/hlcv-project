@@ -11,18 +11,17 @@ def rgb2gray(rgb):
 
 def gauss(sigma):
     
-    ### Your code here
-    
-    raise NotImplementedError
+    Gx = 1/np.sqrt(2*np.pi*sigma**2)*np.exp(-np.arange(-3*sigma,3*sigma+1)**2/(2*sigma**2))
+    x = np.arange(-3*sigma,3*sigma+1)
     
     return Gx, x
 
 
 def gaussianfilter(img, sigma):
-    
-    ### Your code here
-    
-    raise NotImplementedError
+
+    #kernel = np.outer(gauss(sigma), gauss(sigma))
+    kernel = gauss(sigma)
+    outimage = signal.convolve2d(img, kernel, boundary='symm', mode='same')
     
     return outimage
 
