@@ -7,11 +7,13 @@ def normalized_histogram(img_gray, num_bins):
   assert len(img_gray.shape) == 2, 'image dimension mismatch'
   assert img_gray.dtype == 'float', 'incorrect image type'
 
-  ### Your code here
+  # Compute histogram
+  hist, bin_edges = np.histogram(img_gray, bins=num_bins)
+  
+  # Normalize hist
+  hist_norm = hist / (img_gray.size * np.diff(bin_edges))
 
-  raise NotImplementedError
-
-  return hists, bins
+  return hist_norm, bin_edges
 
 
 def rgb_hist(img_color, num_bins):
