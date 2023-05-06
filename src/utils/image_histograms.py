@@ -27,13 +27,13 @@ def rgb_hist(img_color, num_bins):
   for i in range(img_color.shape[0]):
       for j in range(img_color.shape[1]):
           # increment a histogram bin which corresponds to the value of pixel i,j; h(R,G,B)
-          ### Your code here
-          pass
-
+          b, g, r = np.clip(img_color[i,j], 0, 255).astype(int)
+          bin_r = int(r / (255 / num_bins))
+          bin_g = int(g / (255 / num_bins))
+          bin_b = int(b / (255 / num_bins))
+          hists[bin_b,bin_g,bin_r] += 1
   # normalize the histogram such that its integral (sum) is equal 1
-  ### Your code here
-  raise NotImplementedError
-
+  hists = hists / np.sum(hists)
   hists = hists.reshape(hists.size)
   return hists
 
@@ -54,11 +54,15 @@ def rg_hist(img_color, num_bins):
 
   # define a 2D histogram  with "num_bins^2" number of entries
   hists = np.zeros((num_bins, num_bins))
-  
-  # Your code here
-  
-  raise NotImplementedError
+  rg = img_color[:, :, 0] / (img_color[:, :, 0] + img_color[:, :, 1])
+  rg_range = np.linspace(0, 1, num_bins + 1)
 
+  for i in range(num_bins):
+    for j in range(num_bins):
+      r_inds = np.where((rg >= rg_range[i]) & (rg < rg_range[i+1]))
+      g_inds = np.where((rg>= rg_range[j]) & (rg < rg_range[j+1]))
+      hists[i, j] = len(np.intersect1d(r_inds, g_inds))
+  hists = hists / np.sum(hists)
   hists = hists.reshape(hists.size)
   return hists
 
@@ -81,38 +85,43 @@ def dxdy_hist(img_gray, num_bins):
   assert img_gray.dtype == 'float', 'incorrect image type'
 
   # compute the first derivatives
-  
+  Gx, Gy = gaussderiv(img_gray, 7.0)
 
   # quantize derivatives to "num_bins" number of values
+  min_val = np.minimum(np.min(Gx), np.min(Gy))
+  max_val = np.maximum(np.max(Gx), np.max(Gy))
+  Gx = np.clip(np.round((Gx - min_val) / (max_val - min_val) * (num_bins - 1)), 0, num_bins - 1).astype(np.int32)
+  Gy = np.clip(np.round((Gy - min_val) / (max_val - min_val) * (num_bins - 1)), 0, num_bins - 1).astype(np.int32)
+
   # define a 2D histogram  with "num_bins^2" number of entries
   hists = np.zeros((num_bins, num_bins))
-
-  raise NotImplementedError
+  for i in range(img_gray.shape[0]):
+    for j in range(img_gray.shape[1]):
+      hists[Gx[i, j], Gy[i, j]] += 1
   
+  hists = hists / np.sum(hists)
   hists = hists.reshape(hists.size)
   return hists
 
 
 def dist_chi2(x,y):
   """ Compute chi2 distance between x and y """
-  
-  # your code here    
-  raise NotImplementedError
+  assert len(x) == len(y)
+  return np.sum((x - y)**2 / y)
 
 
 def dist_l2(x,y):
   """Compute l2 distance between x and y"""
-      
-  # your code here    
-  raise NotImplementedError
+  assert len(x) == len(y)    
+  return np.sqrt(np.sum((x - y)**2))
 
 
 def dist_intersect(x,y):
 
   """Compute intersection distance between x and y. Return 1 - intersection, so that smaller values also correspond to more similart histograms"""
-  
-  # your code here    
-  raise NotImplementedError
+  assert len(x) == len(y)
+  intsec = np.sum(np.minimum(x, y))
+  return (1 - (intsec / np.sum(np.maximum(x, y))))
 
 
 def get_dist_by_name(x, y, dist_name):
