@@ -14,10 +14,14 @@ def find_best_match(model_images, query_images, dist_type, hist_type, num_bins):
     query_hists = compute_histograms(query_images, hist_type, hist_isgray, num_bins)
 
     D = np.zeros((len(model_images), len(query_images)))
-
-    # Your code here
+    min = np.inf
     
-    raise NotImplementedError
+    for i, query_hist in enumerate(query_hists):
+        for j, model_hist in enumerate(model_hists):
+            D[j, i] = get_dist_by_name(model_hist, query_hist, dist_type)
+            if D[j, i] < min:
+                min = D[j, i]
+                best_match = j
 
     return best_match, D
 
@@ -27,10 +31,15 @@ def compute_histograms(image_list, hist_type, hist_isgray, num_bins):
     image_hist = []
 
     # Compute hisgoram for each image and add it at the bottom of image_hist
-    # Your code here
+    for image in image_list:
+        image_array = np.array(Image.open(image))
+        if hist_isgray:
+            hist = get_hist_by_name(image_array.astype('double'), num_bins, hist_type)
+        else:
+            hist = get_hist_by_name(image_array.astype('double'), num_bins, hist_type)
+        
+        image_hist.append(hist)
     
-    raise NotImplementedError
-
     return np.array(image_hist)
 
 
@@ -39,10 +48,16 @@ def show_neighbors(model_images, query_images, dist_type, hist_type, num_bins):
     plt.figure()
     num_nearest = 5  # Show the top-5 neighbors
     
-    # Your code here
-    
     [_, D] = find_best_match(model_images, query_images, dist_type, hist_type, num_bins)
-    
-    raise NotImplementedError
+    indices = np.apply_along_axis(lambda x : np.argpartition(x, 5), axis=0, arr=D)
 
+    f, ax = plt.subplots(5,len(query_images))
+    for i, query_image in enumerate(query_images):
+        ax[0, i].imshow(Image.open(query_image))
+        ax[0, i].axis('off')
+        for j in range(1, num_nearest):
+            ax[j, i].imshow(Image.open(model_images[indices[j, i]]))
+            ax[j, i].axis('off')
+
+    plt.show()
 
