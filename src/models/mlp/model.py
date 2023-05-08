@@ -32,8 +32,8 @@ class MultiLayerPerceptron(BaseModel):
         #################################################################################
         # TODO: Implement the forward pass computations                                 #
         # Note that you do not need to use the softmax operation at the end.            #
-        # Softmax is only required for the loss computation and the criterion used below#
-        # nn.CrossEntropyLoss() already integrates the softmax and the log loss together#
+        # Softmax is only required for the loss computation and the criterion will take #
+        # care of it later.                                                             #
         #################################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         
