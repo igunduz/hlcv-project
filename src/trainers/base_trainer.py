@@ -82,25 +82,19 @@ class BaseTrainer:
         :return: A dict that contains metric(s) information for validation set
         """
         raise NotImplementedError
-    
-    def save_model(self, path=None):
+
+    def save_model(self, path):
         """
         Saves only the model parameters.
         : param path: path to save model (including filename.)
         """
-        self.logger.info("Saving checkpoint: {} ...".format(path))
-        ## TODO: Save model params only
-        self.logger.info("Checkpoint saved.")
         raise NotImplementedError
     
-    def load_model(self, path=None):
+    def load_model(self, path):
         """
         Loads model params from the given path.
         : param path: path to save model (including filename.)
         """
-        self.logger.info("Loading checkpoint: {} ...".format(path))
-        ## TODO: Load model params only
-        self.logger.info("Checkpoint loaded.")
         raise NotImplementedError
 
     def _save_checkpoint(self, path='checkpoints/ckpt.pth'):

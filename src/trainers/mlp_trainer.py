@@ -59,7 +59,9 @@ class MLPTrainer(BaseTrainer):
             self.writer = TensorboardWriter(config.log_dir, self.logger)
 
         # Prepare Metrics
+        # Basically for every metric, read the type from dict and initialize it with the given arguments
         self.metric_ftns = [getattr(module_metric, met['type'])(**met['args']) for met in config['metrics']]
+        # Give all the metrics + the loss to MetricTracker.
         self.epoch_metrics = MetricTracker(keys=['loss'] + [str(m) for m in self.metric_ftns], writer=self.writer)
         self.eval_metrics = MetricTracker(keys=['loss'] + [str(m) for m in self.metric_ftns], writer=self.writer)
 
@@ -176,3 +178,33 @@ class MLPTrainer(BaseTrainer):
         self.logger.debug(f"++> Evaluate epoch {self.current_epoch} Finished.")
         
         return self.eval_metrics.result()
+
+    def save_model(self, path):
+        """
+        Saves only the model parameters.
+        : param path: path to save model (including filename.)
+        """
+        self.logger.info("Saving checkpoint: {} ...".format(path))
+        ###################################
+        #  TODO: Load model params only
+        #
+        #
+        ###################################
+        self.logger.info("Checkpoint saved.")
+        raise NotImplementedError
+    
+    def load_model(self, path):
+        """
+        Loads model params from the given path.
+        : param path: path to save model (including filename.)
+        """
+        self.logger.info("Loading checkpoint: {} ...".format(path))
+
+        ###################################
+        #  TODO: Load model params only
+        #
+        #
+        ###################################
+
+        self.logger.info("Checkpoint loaded.")
+        raise NotImplementedError
