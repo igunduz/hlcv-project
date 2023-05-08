@@ -8,8 +8,10 @@ def normalized_histogram(img_gray, num_bins):
   assert img_gray.dtype == 'float', 'incorrect image type'
 
   # Compute histogram
-  hist, bin_edges = np.histogram(img_gray, bins=num_bins)
-  
+  hist = np.zeros(num_bins)
+  bin_edges = np.linspace(0, 1, num_bins+1)
+  for i in range(num_bins):
+    hist[i] = np.sum((img_gray >= bin_edges[i]) & (img_gray < bin_edges[i+1]))
   # Normalize hist
   hist_norm = hist / (img_gray.size * np.diff(bin_edges))
 
