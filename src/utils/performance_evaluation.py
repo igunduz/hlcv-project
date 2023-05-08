@@ -28,14 +28,14 @@ def plot_rpc(D, plot_color):
     d = d[sortidx]
     l = l[sortidx]
 
+    # Compute precision and recall values and append them to "recall" and "precision" vectors
     tp = 0
+    fp = 0
     for idx in range(len(d)):
         tp = tp + l[idx]
-
-    # Compute precision and recall values and append them to "recall" and "precision" vectors
-    # Your code here
-    
-    raise NotImplementedError
+        fp = fp + (1 - l[idx])
+        precision.append(tp / (tp + fp))
+        recall.append(tp / (tp + (total_imgs - tp)))
 
     plt.plot([1-precision[i] for i in range(len(precision))], recall, plot_color+'-')
 

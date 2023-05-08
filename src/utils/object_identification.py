@@ -14,15 +14,11 @@ def find_best_match(model_images, query_images, dist_type, hist_type, num_bins):
     query_hists = compute_histograms(query_images, hist_type, hist_isgray, num_bins)
 
     D = np.zeros((len(model_images), len(query_images)))
-    min = np.inf
-    
+    best_match = -1
     for i, query_hist in enumerate(query_hists):
         for j, model_hist in enumerate(model_hists):
             D[j, i] = get_dist_by_name(model_hist, query_hist, dist_type)
-            if D[j, i] < min:
-                min = D[j, i]
-                best_match = j
-
+    best_match = np.argmin(D, axis=0)
     return best_match, D
 
 
@@ -34,10 +30,8 @@ def compute_histograms(image_list, hist_type, hist_isgray, num_bins):
     for image in image_list:
         image_array = np.array(Image.open(image))
         if hist_isgray:
-            hist = get_hist_by_name(image_array.astype('double'), num_bins, hist_type)
-        else:
-            hist = get_hist_by_name(image_array.astype('double'), num_bins, hist_type)
-        
+            image_array = rgb2gray(image_array)
+        hist = get_hist_by_name(image_array.astype('double'), num_bins, hist_type)
         image_hist.append(hist)
     
     return np.array(image_hist)
