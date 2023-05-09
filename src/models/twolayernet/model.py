@@ -256,19 +256,17 @@ class TwoLayerNetv4(TwoLayerNetv3):
             y_batch = y
 
             #########################################################################
-            # TODO: Create a random minibatch of training data and labels, storing  #
+            # Create a random minibatch of training data and labels, storing  #
             # them in X_batch and y_batch respectively.                             #
             #########################################################################
-            # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
             if batch_size > num_train:
                 rand_ind = np.random.choice(num_train, size=batch_size, replace=True)
             else:
                 rand_ind = np.random.choice(num_train, size=batch_size, replace=False)
             X_batch = X[rand_ind]
             y_batch = y[rand_ind]
-
-            # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-
+            #########################################################################
+            
             # Compute loss and gradients using the current minibatch
             loss, grads = self.back_propagation(X_batch, y=y_batch, reg=reg)
             loss_history.append(loss)

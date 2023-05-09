@@ -2,7 +2,6 @@ import json
 import random
 import os
 import numpy as np
-import pandas as pd
 import matplotlib.pyplot as plt
 from pathlib import Path
 from collections import OrderedDict
@@ -11,7 +10,7 @@ import torch
 from .vis_utils import visualize_grid
 
 
-def seed_everything(seed=0):    
+def seed_everything(seed=0):
     random.seed(seed)
     np.random.seed(seed)
     os.environ['PYTHONHASHSEED'] = str(seed)
