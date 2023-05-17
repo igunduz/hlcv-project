@@ -70,8 +70,12 @@ class TwoLayerNetv1(object):
         # of shape (N, C).                                                          #
         #############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
+        hidden_layer1 = np.dot(X, W1) + b1
+        relu = np.maximum(0, hidden_layer1)
+        hidden_layer2 = np.dot(relu, W2) + b2
+        softmax = np.exp(hidden_layer2) / np.sum(np.exp(hidden_layer2), axis=1, keepdims=True)
 
-
+        scores = softmax
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
         # If the targets are not given then jump out, we're done
@@ -114,9 +118,7 @@ class TwoLayerNetv2(TwoLayerNetv1):
         # of shape (N, C).                                                          #
         #############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-
-
-
+        scores = super().forward(X)
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
         # If the targets are not given then jump out, we're done
@@ -132,8 +134,9 @@ class TwoLayerNetv2(TwoLayerNetv1):
         # classifier loss.                                                          #
         #############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-
-
+        data_loss = -np.log(scores[range(N), y])
+        loss = np.sum(data_loss) / N
+        loss += reg * (np.sum(W1 * W1) + np.sum(W2 * W2))
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
         return loss
