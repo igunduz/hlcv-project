@@ -8,6 +8,10 @@ __pycache__/
 # C extensions
 *.so
 
+# data
+data/exercise-2/cifar-10-batches-py/
+src/notebooks/cifar-10-python.tar.gz
+
 # Distribution / packaging
 .Python
 build/

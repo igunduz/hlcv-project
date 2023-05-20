@@ -181,7 +181,8 @@ class TwoLayerNetv3(TwoLayerNetv2):
         # of shape (N, C).                                                          #
         #############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)****
-
+        hidden = np.maximum(0, np.dot(X, W1) + b1)
+        scores = np.dot(hidden, W2) + b2
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
         # If the targets are not given then jump out, we're done
@@ -197,7 +198,13 @@ class TwoLayerNetv3(TwoLayerNetv2):
         # classifier loss.                                                          #
         #############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-
+        scores -= np.max(scores, axis=1, keepdims=True)  # For numerical stability
+        exp_scores = np.exp(scores)
+        probs = exp_scores / np.sum(exp_scores, axis=1, keepdims=True)
+        correct_logprobs = -np.log(probs[np.arange(N), y])
+        data_loss = np.sum(correct_logprobs) / N
+        reg_loss = 0.5 * reg * (np.sum(W1 * W1) + np.sum(W2 * W2))
+        loss = data_loss + reg_loss
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
         # Backward pass: compute gradients
@@ -208,8 +215,18 @@ class TwoLayerNetv3(TwoLayerNetv2):
         # grads['W1'] should store the gradient on W1, and be a matrix of same size #
         #############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-
-
+        dscores = probs.copy()
+        dscores[np.arange(N), y] -= 1
+        dscores /= N
+        grads['W2'] = np.dot(hidden.T, dscores)
+        grads['b2'] = np.sum(dscores, axis=0)
+        dhidden = np.dot(dscores, W2.T)
+        dhidden[hidden <= 0] = 0
+        
+        grads['W1'] = np.dot(X.T, dhidden)
+        grads['b1'] = np.sum(dhidden, axis=0)
+        grads['W2'] += reg * W2
+        grads['W1'] += reg * W1
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
         return loss, grads
@@ -263,7 +280,9 @@ class TwoLayerNetv4(TwoLayerNetv3):
             # them in X_batch and y_batch respectively.                             #
             #########################################################################
             # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-            
+            indices = np.random.choice(num_train, batch_size, replace=False)
+            X_batch = X[batch_indices]
+            y_batch = Y[batch_indices]
             # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
             # Compute loss and gradients using the current minibatch
