@@ -341,8 +341,7 @@ class TwoLayerNetv4(TwoLayerNetv3):
         # TODO: Implement this function; it should be VERY simple!                #
         ###########################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-
-
+        y_pred = np.argmax(self.back_propagation(X), axis=1)
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
         return y_pred
