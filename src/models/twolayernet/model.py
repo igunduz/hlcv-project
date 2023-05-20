@@ -280,9 +280,9 @@ class TwoLayerNetv4(TwoLayerNetv3):
             # them in X_batch and y_batch respectively.                             #
             #########################################################################
             # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-            indices = np.random.choice(num_train, batch_size, replace=False)
-            X_batch = X[batch_indices]
-            y_batch = Y[batch_indices]
+            indices = np.random.choice(num_train, batch_size, replace=True)
+            X_batch = X[indices]
+            y_batch = y[indices]
             # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
             # Compute loss and gradients using the current minibatch
@@ -296,7 +296,8 @@ class TwoLayerNetv4(TwoLayerNetv3):
             # stored in the grads dictionary defined above.                         #
             #########################################################################
             # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-
+            for param in self.params:
+                self.params[param] -= learning_rate * grads[param]
             # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
             if verbose and it % 100 == 0:
