@@ -40,8 +40,6 @@ class MLPTrainer(BaseTrainer):
         # Prepare Losses
         self.criterion = getattr(module_loss, config['loss'])
 
-        print(self.model)
-
         # Prepare Optimizer
         trainable_params = filter(lambda p: p.requires_grad, self.model.parameters())
         self.optimizer = config.init_obj('optimizer', torch.optim, trainable_params)
@@ -195,8 +193,9 @@ class MLPTrainer(BaseTrainer):
         ###################################
         #  TODO: Load model params only
         #
-        #
+        torch.save(self.model.state_dict(), path)
         ###################################
+        
         self.logger.info("Checkpoint saved.")
         raise NotImplementedError
     
@@ -210,8 +209,7 @@ class MLPTrainer(BaseTrainer):
         ###################################
         #  TODO: Load model params only
         #
-        #
+        self.model.load_state_dict(torch.load(path))
         ###################################
 
         self.logger.info("Checkpoint loaded.")
-        raise NotImplementedError

@@ -69,7 +69,8 @@ class BaseTrainer:
 
         returns a Boolean
         """
-        raise NotImplementedError
+        return self.current_epoch % self.save_period == 0
+ 
     
     @abstractmethod
     def evaluate(self, loader=None):
