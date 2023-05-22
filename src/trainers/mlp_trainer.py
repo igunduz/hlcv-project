@@ -40,6 +40,8 @@ class MLPTrainer(BaseTrainer):
         # Prepare Losses
         self.criterion = getattr(module_loss, config['loss'])
 
+        print(self.model)
+
         # Prepare Optimizer
         trainable_params = filter(lambda p: p.requires_grad, self.model.parameters())
         self.optimizer = config.init_obj('optimizer', torch.optim, trainable_params)
@@ -99,7 +101,11 @@ class MLPTrainer(BaseTrainer):
             # Use examples in https://pytorch.org/tutorials/beginner/pytorch_with_examples.html
             #################################################################################
             # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-            
+            self.optimizer.zero_grad()
+            output = self.model(images)
+            loss = self.criterion(output, labels)
+            loss.backward()
+            self.optimizer.step()
             # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
             self.writer.set_step((self.current_epoch - 1) * len(self._train_loader) + batch_idx)
@@ -155,7 +161,8 @@ class MLPTrainer(BaseTrainer):
             # 2. Get the most confident predicted class        #
             ####################################################
             # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-            
+            output = self.model(images)
+            loss = self.criterion(output, labels)
             # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
             self.writer.set_step((self.current_epoch - 1) * len(loader) + batch_idx, 'valid')

@@ -10,7 +10,11 @@ class MultiLayerPerceptron(BaseModel):
         # TODO: Initialize the different model parameters from the config file  #
         
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-        
+        self.input_size = input_size
+        self.hidden_layers = hidden_layers
+        self.num_classes = num_classes
+        self.activation = activation
+        self.drop_prob = drop_prob
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
     def build_model(self):
@@ -24,7 +28,15 @@ class MultiLayerPerceptron(BaseModel):
 
         layers = []
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-        
+        layers.append(nn.Linear(self.input_size, self.hidden_layers[0]))
+        print(len(self.hidden_layers))
+        for i, units in enumerate(self.hidden_layers):
+            layers.append(nn.ReLU()) if self.activation == 'relu' else layers.append(nn.Sigmoid())
+            layers.append(nn.Dropout(p=self.drop_prob))
+            if i == len(self.hidden_layers)-1:
+                layers.append(nn.Linear(self.hidden_layers[-1], self.num_classes))
+            else:
+                layers.append(nn.Linear(units, self.hidden_layers[i+1]))
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
 
@@ -36,6 +48,16 @@ class MultiLayerPerceptron(BaseModel):
         # nn.CrossEntropyLoss() already integrates the softmax and the log loss together#
         #################################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-        
+        x = nn.Flatten(x, 1)
+        x = self.layers(x)
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         return x
+    
+    def __str__(self):
+        """
+        Model prints with number of trainable parameters
+        """
+
+        ret_str = super().__str__()
+
+        return ret_str 
