@@ -18,11 +18,9 @@ class BaseModel(nn.Module):
 
     def __str__(self):
         """
-        Model prints with number of trainable parameters
+        For now nothing special.
         """
 
         ret_str = super().__str__()
-
-        raise NotImplementedError
         
         return ret_str

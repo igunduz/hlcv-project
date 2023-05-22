@@ -1,4 +1,3 @@
-import torch
 import os
 
 from abc import abstractmethod
@@ -50,7 +49,7 @@ class BaseTrainer:
             log = {'epoch': self.current_epoch}
             log.update(result)
 
-            if self.do_evaluate():
+            if self._do_evaluate():
                 result = self.evaluate()
                 # save eval information to the log dict as well
                 log.update({f'eval_{key}': value for key, value in result.items()})    
@@ -63,7 +62,7 @@ class BaseTrainer:
                 path = os.path.join(self.checkpoint_dir, f'E{self.current_epoch}_model.ckpt')
                 self.save_model(path=path)
 
-    def do_evaluate(self):
+    def _do_evaluate(self):
         """
         Based on the self.current_epoch and self.eval_interval, determine if we should evaluate.
         You can take hint from saving logic implemented in BaseTrainer.train() method
@@ -82,28 +81,22 @@ class BaseTrainer:
         :return: A dict that contains metric(s) information for validation set
         """
         raise NotImplementedError
-    
-    def save_model(self, path=None):
+
+    def save_model(self, path):
         """
         Saves only the model parameters.
         : param path: path to save model (including filename.)
         """
-        self.logger.info("Saving checkpoint: {} ...".format(path))
-        ## TODO: Save model params only
-        self.logger.info("Checkpoint saved.")
         raise NotImplementedError
     
-    def load_model(self, path=None):
+    def load_model(self, path):
         """
         Loads model params from the given path.
         : param path: path to save model (including filename.)
         """
-        self.logger.info("Loading checkpoint: {} ...".format(path))
-        ## TODO: Load model params only
-        self.logger.info("Checkpoint loaded.")
         raise NotImplementedError
 
-    def _save_checkpoint(self, path='checkpoints/ckpt.pth'):
+    def save_checkpoint(self, path):
         """
         Saving TRAINING checkpoint. Including the model params and other training stats 
         (optimizer, current epoch, etc.)
@@ -112,7 +105,7 @@ class BaseTrainer:
         """
         raise RuntimeError("Not for this assignment!")
 
-    def _resume_checkpoint(self, path='checkpoints/ckpt.pth'):
+    def resume_checkpoint(self, path):
         """
         Loads TRAINING checkpoint. Including the model params and other training stats 
         (optimizer, current epoch, etc.)
