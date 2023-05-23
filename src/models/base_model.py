@@ -18,9 +18,14 @@ class BaseModel(nn.Module):
 
     def __str__(self):
         """
-        For now nothing special.
+        Model prints with number of trainable parameters
         """
 
         ret_str = super().__str__()
+
+        #################################################################################
+        # TODO: Q1.b) Print the number of trainable parameters for each layer and total number of trainable parameters
+        # Simply update the ret_str by adding new lines to it.
+        #################################################################################
         
         return ret_str
