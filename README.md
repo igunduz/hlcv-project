@@ -19,6 +19,16 @@ git fetch upstream
 git merge upstream/main
 ```
 
+**Note** : Merging with the upstream might encounter merge conflicts if a solution to previous assignment is provided (Because there would be two modification: ours and yours to the same place). In this case,
+
+we recomment accepting "Incoming Change" which would be our solution. You can use VSCode for resolving conflicts and keep both your code and our changes!
+
+You can also force the upstream changes over yours by changing the `git merge` command to
+
+```bash
+git merge --strategy-option theirs upstream/main
+```
+
 Remember that you won't be pushing to upstream branch, rather your own private fork.
 
 ## Working with Notebooks

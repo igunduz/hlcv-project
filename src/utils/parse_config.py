@@ -9,7 +9,7 @@ from .utils import read_json, write_json
 
 
 class ConfigParser:
-    def __init__(self, config, resume=None, modification=None, run_id=None):
+    def __init__(self, config, root_dir=None, resume=None, modification=None, run_id=None):
         """
         class to parse configuration json file. Handles hyperparameters for training, initializations of modules, checkpoint saving
         and logging module.
@@ -23,8 +23,11 @@ class ConfigParser:
         self.resume = resume
 
         # set save_dir where trained model and log will be saved.
-        save_dir = Path(self.config['trainer']['save_dir'])
-
+        save_dir = self.config['trainer']['save_dir']
+        if root_dir is not None:
+          save_dir = os.path.join(root_dir, save_dir)
+        save_dir = Path(save_dir)
+    
         exper_name = self.config['name']
         if run_id is None: # use timestamp as default run-id
             run_id = datetime.now().strftime(r'%m%d_%H%M%S')
@@ -78,23 +81,28 @@ class ConfigParser:
         return cls(config, resume, modification)
     
     @classmethod
-    def wo_args(cls, config, resume=None):
+    def wo_args(cls, config, root_dir=None, resume=None):
         """
         Initialize this class without cli arguments. Used in inference.
         """
         if resume is not None:
+            if root_dir is not None:
+                resume = os.path.join(root_dir, resume)
             resume = Path(resume)
             cfg_fname = resume.parent / 'config.json'
         else:
             resume = None
+            if root_dir is not None:
+                config = os.path.join(root_dir, config)
             cfg_fname = Path(config)
+            
         
         config = read_json(cfg_fname)
         if resume:
             # update new config for fine-tuning
             config.update(read_json(config))
 
-        return cls(config, resume, None)
+        return cls(config, root_dir, resume, None)
 
     def init_obj(self, name, module, *args, **kwargs):
         """
