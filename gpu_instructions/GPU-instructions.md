@@ -42,6 +42,7 @@ chmod +x Miniconda3-py310_23.3.1-0-Linux-x86_64.sh
 ```
 git clone https://gitlab.cs.uni-saarland.de/hlcv/ss23/teamN
 cd teamN
+mkdir condor_logs
 ```
 
 ### Pull the demo from the upstream
