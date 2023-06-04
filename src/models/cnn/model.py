@@ -18,7 +18,13 @@ class ConvNet(BaseModel):
         # Or you can just hard-code using nn.Batchnorm2d and nn.ReLU as they remain fixed for this exercise. #
         ###################################################################################################### 
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
+        self.activation = getattr(nn, activation["type"])(**activation["args"])
+        self.norm_layer = getattr(nn, norm_layer["type"])
 
+        self._input_size = input_size
+        self._hidden_layers = hidden_layers
+        self._num_classes = num_classes
+        self._drop_prob = drop_prob
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         self._build_model()
 
@@ -33,7 +39,19 @@ class ConvNet(BaseModel):
         #################################################################################
         layers = []
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-        
+        # Convolutional Layers
+        layers.append(nn.Conv2d(self._input_size, self._hidden_layers[0], kernel_size=3, padding=1))
+        layers.append(getattr(nn, self._activation.__class__.__name__)())  # ReLU activation
+        for i in range(len(self._hidden_layers) - 1):
+            layers.append(nn.Conv2d(self._hidden_layers[i], self._hidden_layers[i + 1], kernel_size=3, padding=1))
+            layers.append(getattr(nn, self._activation.__class__.__name__)())  # ReLU activation
+            layers.append(getattr(nn, self._norm_layer.__class__.__name__)(self._hidden_layers[i + 1]))  # BatchNorm2d layer
+            layers.append(nn.Dropout2d(self._drop_prob))  # Dropout layer
+
+        # Output Layer
+        layers.append(nn.Conv2d(self._hidden_layers[-1], self._num_classes, kernel_size=1))
+
+        self.model = nn.Sequential(*layers)
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
     def _normalize(self, img):
@@ -61,6 +79,7 @@ class ConvNet(BaseModel):
         # TODO: Implement the forward pass computations                                 #
         #################################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****        
-        
+        x = self.model(x)
+        x = x.mean(dim=(2, 3))
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         return x
