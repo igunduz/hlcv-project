@@ -18,9 +18,8 @@ class ConvNet(BaseModel):
         # Or you can just hard-code using nn.Batchnorm2d and nn.ReLU as they remain fixed for this exercise. #
         ###################################################################################################### 
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-        self.activation = getattr(nn, activation["type"])(**activation["args"])
-        self.norm_layer = getattr(nn, norm_layer["type"])
-
+        self._activation = getattr(nn, activation["type"])(**activation["args"])
+        self._norm_layer = getattr(nn, norm_layer["type"])()
         self._input_size = input_size
         self._hidden_layers = hidden_layers
         self._num_classes = num_classes
@@ -45,12 +44,12 @@ class ConvNet(BaseModel):
         for i in range(len(self._hidden_layers) - 1):
             layers.append(nn.Conv2d(self._hidden_layers[i], self._hidden_layers[i + 1], kernel_size=3, padding=1))
             layers.append(getattr(nn, self._activation.__class__.__name__)())  # ReLU activation
-            layers.append(getattr(nn, self._norm_layer.__class__.__name__)(self._hidden_layers[i + 1]))  # BatchNorm2d layer
+            layers.append(self._norm_layer)  # BatchNorm2d layer
             layers.append(nn.Dropout2d(self._drop_prob))  # Dropout layer
 
         # Output Layer
         layers.append(nn.Conv2d(self._hidden_layers[-1], self._num_classes, kernel_size=1))
-
+        
         self.model = nn.Sequential(*layers)
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
@@ -71,10 +70,34 @@ class ConvNet(BaseModel):
         # You can use matlplotlib.imshow to visualize an image in python                #
         #################################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-        raise NotImplementedError
+        conv_weights = self.model[0].weight.data.cpu().numpy()
+        num_filters = conv_weights.shape[0]
+        num_channels = conv_weights.shape[1]
+        filter_size = conv_weights.shape[2]
+
+        # Create a grid 
+        grid_size = int(np.sqrt(num_filters))
+        filter_grid = np.zeros((grid_size * filter_size, grid_size * filter_size, num_channels))
+
+        # create stacks and normalize
+        stacked_filters = conv_weights.reshape(num_filters, num_channels, filter_size, filter_size)
+        min_val = np.min(stacked_filters)
+        max_val = np.max(stacked_filters)
+        stacked_filters = (stacked_filters - min_val) / (max_val - min_val)
+    
+        # Stack the filters into grid
+        for i in range(grid_size):
+            for j in range(grid_size):
+                filter_grid[i * filter_size: (i + 1) * filter_size, j * filter_size: (j + 1) * filter_size, :] = stacked_filters[i * grid_size + j]
+
+        
+        plt.figure(figsize=(10, 10))
+        plt.imshow(filter_grid)
+        plt.axis('off')
+        plt.show()
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-    def forward(self, x):
+    def forward(self, x ):
         #################################################################################
         # TODO: Implement the forward pass computations                                 #
         #################################################################################

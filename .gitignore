@@ -4,6 +4,7 @@ __pycache__/
 .DS_Store
 *.py[cod]
 *$py.class
+data/exercise-2/cifar-10-python.tar.gz
 
 # C extensions
 *.so
