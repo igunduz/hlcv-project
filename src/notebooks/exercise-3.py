@@ -21,8 +21,8 @@ from os.path import join as ospj
 
 sys.path.append(ospj(PROJECT_ROOT, 'src'))
 
-%load_ext autoreload
-%autoreload 2
+#%load_ext autoreload
+#%autoreload 2
 
 # %% [markdown]
 # In Exercise 3, you will implement a convolutional neural network to perform image classification and explore methods to improve the training performance and generalization of these networks.
@@ -61,7 +61,7 @@ from trainers.cnn_trainer import CNNTrainer
 import data_loaders.data_modules as module_data
 
 from copy import deepcopy
-%aimport -ConfigParser # Due to an issue of pickle and auto_reload
+#%aimport -ConfigParser # Due to an issue of pickle and auto_reload
 
 # %%
 config = ConfigParser.wo_args(config='cfgs/exercise-3/cnn_cifar10.json', root_dir=PROJECT_ROOT)
