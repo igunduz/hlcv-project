@@ -101,7 +101,22 @@ class BaseTrainer:
 
                     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
                     # check whether model performance improved or not, according to specified metric(monitor_metric)
-
+                    if self.monitor_mode == 'min':
+                        improved = log[self.monitor_metric] < self.monitor_best
+                        print(f"Epoch {self.current_epoch} improved: {improved} (loss: {log[self.monitor_metric]}) (best: {self.monitor_best})")
+                    else:
+                        improved = log[self.monitor_metric] > self.monitor_best
+                        print(f"Epoch {self.current_epoch} improved: {improved} (loss: {log[self.monitor_metric]}) (best: {self.monitor_best})")
+                    
+                    if improved: 
+                        self.save_model(os.path.join(self.checkpoint_dir, f'best_val_model.pth'))
+                        self.monitor_best = log[self.monitor_metric]
+                        self.not_improved_count = 0
+                        self.best_epoch = self.current_epoch
+                        print(f"New best model saved at epoch {self.current_epoch}")
+                    else:
+                        self.not_improved_count += 1
+                        
                     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
                     ############################################################################################
@@ -109,7 +124,10 @@ class BaseTrainer:
                     # the last self.early_stop steps, see if you should break the training loop.               #
                     ############################################################################################
                     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-                    pass                    
+                    #if self.not_improved_count >= self.early_stop:
+                    #        self.logger.info(f"Validation performance didn't improve for {self.early_stop} epochs. Stopping training.")
+                    #        break  
+                    pass                  
                     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
 
