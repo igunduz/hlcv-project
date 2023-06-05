@@ -124,10 +124,9 @@ class BaseTrainer:
                     # the last self.early_stop steps, see if you should break the training loop.               #
                     ############################################################################################
                     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-                    #if self.not_improved_count >= self.early_stop:
-                    #        self.logger.info(f"Validation performance didn't improve for {self.early_stop} epochs. Stopping training.")
-                    #        break  
-                    pass                  
+                    if self.not_improved_count >= self.early_stop:
+                            self.logger.info(f"Validation performance didn't improve for {self.early_stop} epochs. Stop training.")
+                            break                  
                     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
 
