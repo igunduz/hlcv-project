@@ -44,7 +44,10 @@ class ConvNet(BaseModel):
         for i in range(len(self._hidden_layers) - 1):
             layers.append(nn.Conv2d(self._hidden_layers[i], self._hidden_layers[i + 1], kernel_size=3, padding=1))
             layers.append(getattr(nn, self._activation.__class__.__name__)())  # ReLU activation
-            layers.append(self._norm_layer)  # BatchNorm2d layer
+            if self._norm_layer is not None:
+                layers.append(nn.BatchNorm2d(self._hidden_layers[0]))  # BatchNorm2d layer
+            else:
+                layers.append(self._norm_layer)  # BatchNorm2d layer
             layers.append(nn.Dropout2d(self._drop_prob))  # Dropout layer
 
         # Output Layer
