@@ -5,7 +5,10 @@ __pycache__/
 *.py[cod]
 *$py.class
 data/exercise-2/cifar-10-python.tar.gz
-
+*/gpu_instructions/
+execute.sh
+ex3.sub
+docker_stderror
 # C extensions
 *.so
 
