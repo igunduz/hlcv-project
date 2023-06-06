@@ -5,10 +5,13 @@ __pycache__/
 *.py[cod]
 *$py.class
 data/exercise-2/cifar-10-python.tar.gz
-
+gpu_instructions/docker_stderror
+gpu_instructions/pytorch_docker_interactive.sub
 # C extensions
 *.so
-
+docker_stderror
+ex3.sub
+execute.sh
 # data
 data/exercise-2/cifar-10-batches-py/
 src/notebooks/cifar-10-python.tar.gz

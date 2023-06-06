@@ -6,9 +6,9 @@ executable              = execute.sh
 arguments               = demo.py
 
 # Paths to output, error, and log files
-output                  = /home/hlcv_teamxxx/teamN/condor_logs/demo.$(ClusterId).$(ProcId).out
-error                   = /home/hlcv_teamxxx/teamN/condor_logs/demo.$(ClusterId).$(ProcId).err
-log                     = /home/hlcv_teamxxx/teamN/condor_logs/demo.$(ClusterId).log
+output                  = /home/hlcv_team002/team39/condor_logs/demo.$(ClusterId).$(ProcId).out
+error                   = /home/hlcv_team002/team39/condor_logs/demo.$(ClusterId).$(ProcId).err
+log                     = /home/hlcv_team002/team39/condor_logs/demo.$(ClusterId).log
 
 should_transfer_files   = YES
 
