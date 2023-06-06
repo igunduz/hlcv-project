@@ -49,7 +49,7 @@ class ConvNet(BaseModel):
             #    layers.append(nn.BatchNorm2d(self._hidden_layers[0]))  # BatchNorm2d layer
             #else:
             layers.append(self._norm_layer)  # BatchNorm2d layer
-
+            #TODO convert Dropout2d to a parameter
             layers.append(nn.Dropout2d(self._drop_prob))  # Dropout layer
 
         # Output Layer
