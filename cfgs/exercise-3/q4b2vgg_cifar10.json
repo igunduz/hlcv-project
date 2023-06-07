@@ -15,7 +15,7 @@
                 "type": "BatchNorm1d"
             },
             "fine_tune": true,
-            "pretrained": "DEFAULT"
+            "pretrained": false
         }
     },
     "data_module": {
