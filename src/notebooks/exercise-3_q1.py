@@ -90,15 +90,7 @@ test_loader = test_module.get_loader()
 # %%
 trainer_cnn = CNNTrainer(config=config, train_loader=train_data_loader, eval_loader=valid_data_loader)
 
-trainer_cnn.model.VisualizeFilter()
 trainer_cnn.train()
-trainer_cnn.model.VisualizeFilter()
-save_dir = "/home/hlcv_team002/team39"
-# Save the figures to files
-for i, figure in enumerate(trainer_cnn.model.get_figures()):
-    save_path = os.path.join(save_dir, f"figure_{i}.png")
-    figure.savefig(save_path)
-    plt.close(figure)
     
 # %%
 # Change this to the experiment you want to visualize (format is `MMDD_TIME`)

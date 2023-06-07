@@ -3,7 +3,7 @@ docker_image            = nvidia/cuda:11.4.3-runtime-ubuntu20.04
 executable              = execute.sh
 
 # Python file to run, can also include arguments
-arguments               = exercise-3_q3.py
+arguments               = exercise-3_q3b.py
 
 # Paths to output, error, and log files
 output                  = /home/hlcv_team002/team39/condor_logs/q3b.$(ClusterId).$(ProcId).out
