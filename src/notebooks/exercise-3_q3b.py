@@ -63,47 +63,59 @@ from copy import deepcopy
 
 # %%
 config = ConfigParser.wo_args(config='cfgs/exercise-3/cnn_cifar10.json', root_dir=PROJECT_ROOT)
+# Define the dropout probabilities to be tested
+dropout_probs = [0.1, 0.3, 0.5, 0.7, 0.9]
 
-# Get the preset names you want to use
-preset_names = ['CIFAR10_WithFlip2', 'CIFAR10_WithFlip4', 
-                'CIFAR10_WithFlip8','CIFAR10_WithColor',
-                'CIFAR10_WithColorC','CIFAR10_WithColorPlus',
-                'CIFAR10_WithColorB']  
+train_accuracies = []
+valid_accuracies = []
+test_accuracies = []
 
-# Loop over the preset names and train the model with each preset
-for preset_name in preset_names:
-    # Update the preset_name in the configuration
-    config['data_module']['args']['preset_name'] = preset_name
-    
-    # Initialize the data module with the updated config
+for dropout_prob in dropout_probs:
+    # Update the dropout probability in the configuration
+    config['model']['args']['dropout_prob'] = dropout_prob
+
+    # Initialize the data module
     datamodule = config.init_obj('data_module', module_data, root_dir=PROJECT_ROOT)
-    
+
     # Get the data loaders for training and validation
     train_data_loader = datamodule.get_loader()
     valid_data_loader = datamodule.get_heldout_loader()
-    
+
     # Test loader is the same as train loader, with modified arguments
     test_loader_args = deepcopy(config['data_module']['args'])
     test_loader_args['training'] = False
     test_loader_args['shuffle'] = False
     test_loader_args['heldout_split'] = 0.0
-    
+
     # Initialize the test module with the modified config
     test_module = getattr(module_data, config['data_module']['type'])(root_dir=PROJECT_ROOT, **test_loader_args)
     # Get the loader from it
     test_loader = test_module.get_loader()
-    
+
     # Initialize the trainer and train the model
     trainer_cnn = CNNTrainer(config=config, train_loader=train_data_loader, eval_loader=valid_data_loader)
-    trainer_cnn.model.VisualizeFilter()
+
+    # Train the model
     trainer_cnn.train()
-    trainer_cnn.model.VisualizeFilter()
 
-    preset_dir = preset_name
+    # Save the best model based on validation accuracy
+    preset_dir = f"dropout_{dropout_prob}"
     path = ospj(PROJECT_ROOT, f'saved/models/CIFAR10_CNN/{preset_dir}/best_val_model.pth')
+    trainer_cnn.save_model(path)
 
-    trainer_cnn.load_model(path=path)
+    # Evaluate the model on training, validation, and test data
+    train_accuracy = trainer_cnn.evaluate(train_loader=train_data_loader)
+    valid_accuracy = trainer_cnn.evaluate(loader=valid_data_loader)
+    test_accuracy = trainer_cnn.evaluate(loader=test_loader)
 
-    result = trainer_cnn.evaluate(loader=test_loader)
+    # Save the accuracies for plotting
+    train_accuracies.append(train_accuracy)
+    valid_accuracies.append(valid_accuracy)
+    test_accuracies.append(test_accuracy)
 
-    print(f'Result for preset {preset_name}: {result}')
+    # Print the results for the current dropout probability
+    print(f"Dropout Probability: {dropout_prob}, "
+          f"Training Accuracy: {train_accuracy}, "
+          f"Validation Accuracy: {valid_accuracy}, "
+          f"Test Accuracy: {test_accuracy}")
+

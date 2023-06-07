@@ -53,6 +53,7 @@ sys.path.append(ospj(PROJECT_ROOT, 'src'))
 
 # %%
 from torchvision import transforms
+import matplotlib.pyplot as plt
 
 from utils.parse_config import ConfigParser
 from trainers.cnn_trainer import CNNTrainer
@@ -92,7 +93,13 @@ trainer_cnn = CNNTrainer(config=config, train_loader=train_data_loader, eval_loa
 trainer_cnn.model.VisualizeFilter()
 trainer_cnn.train()
 trainer_cnn.model.VisualizeFilter()
-
+save_dir = "/home/hlcv_team002/team39"
+# Save the figures to files
+for i, figure in enumerate(trainer_cnn.model.get_figures()):
+    save_path = os.path.join(save_dir, f"figure_{i}.png")
+    figure.savefig(save_path)
+    plt.close(figure)
+    
 # %%
 # Change this to the experiment you want to visualize (format is `MMDD_TIME`)
 checkpoint_dir = '0607_121554' 
