@@ -19,7 +19,7 @@ class ConvNet(BaseModel):
         ###################################################################################################### 
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         self._activation = getattr(nn, activation["type"])(**activation["args"])
-        self._norm_layer = getattr(nn, norm_layer["type"])()
+        self._norm_layer = norm_layer
         self._input_size = input_size
         self._hidden_layers = hidden_layers
         self._num_classes = num_classes
@@ -43,12 +43,11 @@ class ConvNet(BaseModel):
         layers.append(getattr(nn, self._activation.__class__.__name__)())  # ReLU activation
         for i in range(len(self._hidden_layers) - 1):
             layers.append(nn.Conv2d(self._hidden_layers[i], self._hidden_layers[i + 1], kernel_size=3, padding=1))
+            layers.append(getattr(nn, self._norm_layer["type"])(self._hidden_layers[i + 1]))  # BatchNorm2d layer
             layers.append(getattr(nn, self._activation.__class__.__name__)())  # ReLU activation
+            #TODO do we need pooling?
+            layers.append(nn.MaxPool2d(kernel_size=2, stride=2))  # MaxPool2d layer
 
-            #if self._norm_layer is not None:
-            #    layers.append(nn.BatchNorm2d(self._hidden_layers[0]))  # BatchNorm2d layer
-            #else:
-            layers.append(self._norm_layer)  # BatchNorm2d layer
             #TODO convert Dropout2d to a parameter
             layers.append(nn.Dropout2d(self._drop_prob))  # Dropout layer
 
