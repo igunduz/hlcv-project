@@ -85,9 +85,10 @@ class EncoderBlock(nn.Module):
         x, attention_weights = self.self_attention(x, x, x, need_weights=self.need_weights)
         x = x + input
 
+        intermediate = x
         x = self.ln_2(x)
         x = self.mlp(x)
-        result = x + input
+        result = x + intermediate
         ################################
 
         if self.need_weights:
@@ -285,5 +286,8 @@ class VisionTransformer(nn.Module):
         # Also note that the attention of CLS token w.r.t other tokens also includes
         # its attention to itself (which should not be used for visualization)
 
-        raise NotImplementedError
+        cls_attention = attention_weights[:, 0, 1:]
+        cls_attention = cls_attention.reshape(-1, n_h, n_w, 1)
+
+        return cls_attention
         #########################
