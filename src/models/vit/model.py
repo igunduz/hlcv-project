@@ -2,9 +2,6 @@
 Code was originally taken from PyTorch.
 
 """
-
-from torchshape import tensorshape 
-
 import torch
 import math
 from collections import OrderedDict
@@ -84,19 +81,13 @@ class EncoderBlock(nn.Module):
         # You may also have to return attention weights based on self.need_weights
         # Hint: There's already a `need_weights` argument for nn.MultiheadAttention forward pass. See the docs.
 
-        result = None
-        attention_weights = None # Needed only if self.need_weights is True for this specific Block
-
         x = self.ln_1(input)
         x, attention_weights = self.self_attention(x, x, x, need_weights=self.need_weights)
         x = x + input
 
         x = self.ln_2(x)
         x = self.mlp(x)
-        x = x + input
-
-        
-        raise NotImplementedError
+        result = x + input
         ################################
 
         if self.need_weights:
@@ -130,8 +121,8 @@ class Encoder(nn.Module):
             ## If you change the names of layers then the pre-trained weights will not load!
             ## Hint: Set need_weights to True only for last Block and False for others
             ## As we would like to visualize attention weights for last layer later.
-
-            layers[f"encoder_layer_{i}"] = None # Replace None with Block
+            need_weights = False if i < num_layers - 1 else True
+            layers[f"encoder_layer_{i}"] = EncoderBlock(num_heads, hidden_dim, mlp_dim, norm_layer, need_weights)
             #################################
 
         self.layers = nn.Sequential(layers)
@@ -145,9 +136,10 @@ class Encoder(nn.Module):
         ### TODO Q1: Apply the forward pass over the Encoder.
         ## 1. Add Positional Embedding (self.pos_embedding) to the input
         ## 2. Feed it to self.layers and get the result and attention_weights
-        result = None
-        attention_weights = None
-        raise NotImplementedError
+        pos_input = self.pos_embedding + input
+        result, attention_weights = self.layers(pos_input)
+        #result = None
+        #attention_weights = None
         #####################################
 
         result = self.ln(result) # Final layer norm
@@ -182,9 +174,8 @@ class VisionTransformer(nn.Module):
         # in order to get (patch_size x patch_size) non-overlapping patches.
         # For example, in the figure in lecture, the image is broken 
         # into 9 non-overlapping patches.
-        print('patch_size', patch_size)
         kernel_size = patch_size
-        stride = 1
+        stride = patch_size
         ############################
         self.conv_proj = nn.Conv2d(
             in_channels=3, out_channels=hidden_dim, kernel_size=kernel_size, stride=stride
@@ -232,11 +223,6 @@ class VisionTransformer(nn.Module):
         # (n, c, h, w) -> (n, hidden_dim, n_h, n_w)
         x = self.conv_proj(x)
 
-        #print(tensorshape(nn.Conv2d(), (n, c, h, w)))
-
-        print(n, self.hidden_dim, n_h, n_w)
-        print(x.shape)
-
         # (n, hidden_dim, n_h, n_w) -> (n, hidden_dim, (n_h * n_w))
         x = x.reshape(n, self.hidden_dim, n_h * n_w)
 
@@ -261,9 +247,9 @@ class VisionTransformer(nn.Module):
         
         ##########################
         # TODO Q1: Feed it to the encoder and get the results and attention_weights
-        results = None
-        attention_weights = None
-        raise NotImplementedError
+        results, attention_weights = self.encoder(x)
+        #results = None
+        #attention_weights = None
         ##########################
 
         # Take out the CLS token (in fact "tokens" because we have a batch)
@@ -271,8 +257,7 @@ class VisionTransformer(nn.Module):
         
         ##########################
         # TODO Q1: Apply the final classification head
-        final_logits = None
-        raise NotImplementedError
+        final_logits = self.heads(cls_token)
         ##########################
 
         visualized_attention = self.visualize_cls(attention_weights, n_h, n_w)
