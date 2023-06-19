@@ -2,6 +2,9 @@
 Code was originally taken from PyTorch.
 
 """
+
+from torchshape import tensorshape 
+
 import torch
 import math
 from collections import OrderedDict
@@ -83,6 +86,16 @@ class EncoderBlock(nn.Module):
 
         result = None
         attention_weights = None # Needed only if self.need_weights is True for this specific Block
+
+        x = self.ln_1(input)
+        x, attention_weights = self.self_attention(x, x, x, need_weights=self.need_weights)
+        x = x + input
+
+        x = self.ln_2(x)
+        x = self.mlp(x)
+        x = x + input
+
+        
         raise NotImplementedError
         ################################
 
@@ -169,9 +182,9 @@ class VisionTransformer(nn.Module):
         # in order to get (patch_size x patch_size) non-overlapping patches.
         # For example, in the figure in lecture, the image is broken 
         # into 9 non-overlapping patches.
-        kernel_size = None
-        stride = None
-        raise NotImplementedError
+        print('patch_size', patch_size)
+        kernel_size = patch_size
+        stride = 1
         ############################
         self.conv_proj = nn.Conv2d(
             in_channels=3, out_channels=hidden_dim, kernel_size=kernel_size, stride=stride
@@ -218,6 +231,11 @@ class VisionTransformer(nn.Module):
 
         # (n, c, h, w) -> (n, hidden_dim, n_h, n_w)
         x = self.conv_proj(x)
+
+        #print(tensorshape(nn.Conv2d(), (n, c, h, w)))
+
+        print(n, self.hidden_dim, n_h, n_w)
+        print(x.shape)
 
         # (n, hidden_dim, n_h, n_w) -> (n, hidden_dim, (n_h * n_w))
         x = x.reshape(n, self.hidden_dim, n_h * n_w)
