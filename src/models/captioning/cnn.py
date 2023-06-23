@@ -1,6 +1,7 @@
 import torch
 import torchvision
 import torch.nn as nn
+import torch.nn.functional as F
 
 
 class EncoderCNN(nn.Module):
@@ -15,7 +16,8 @@ class EncoderCNN(nn.Module):
         # TODO 
         # Create a sequential model with all the layers of resnet except the last fc layer.
         # Add a linear layer to bring resnet features down to embed_size
-        raise NotImplementedError
+        self.resnet = nn.Sequential(*list(resnet.children())[:-1])
+        self.linear = nn.Linear(resnet.fc.in_features, embed_size)
         #########################
         self.bn = nn.BatchNorm1d(embed_size)
 
@@ -26,5 +28,9 @@ class EncoderCNN(nn.Module):
         # Run your input images through the modules you created above
         # Make sure to freeze the weights of the resnet layers
         # finally return the normalized features
-        raise NotImplementedError
+        features = self.resnet(images)
+        features = features.reshape(features.size(0), -1)
+        features = self.linear(features)
+        features = self.bn(features)
+        return F.normalize(features, dim=1)
         #########################

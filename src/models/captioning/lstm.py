@@ -38,7 +38,14 @@ class DecoderLSTM(nn.Module):
         # Note that at each step, the output is a linear transformation of the lstm hidden state
         # The output is a vector of size vocab_size
         # You can take hints from the sample_beam_search function below
-        raise NotImplementedError
+        states = None
+        for _ in range(self.max_seg_length):
+            hiddens, states = self.lstm(inputs,states)
+            outputs = self.linear(hiddens.squeeze(1))
+            _, predicted = outputs.max(1)
+            sampled_ids.append(predicted)
+            inputs = self.embed(predicted).unsqueeze(1)
+        sampled_ids = torch.stack(sampled_ids,1)
         #########################
         return sampled_ids[0].cpu().numpy()
     
@@ -95,5 +102,19 @@ class DecoderLSTM(nn.Module):
         # Refer to utils/build_vocab.py to see how the vocab object is constructed
         # That should give you an idea on how to use the vocab object to convert word ids to words
         # Specifically, your final sentences should not contain the <start>, <pad> and <end> tokens
-        raise NotImplementedError
+        sentences = []
+        for caption in captions:
+            words = []
+            for wid in caption:
+                word = vocab.idx2word[wid]
+                if word == "<end>":
+                    break
+                words.append(word)
+            sentence = " ".join(words)
+            sentences.append(sentence)
+            
+        if singleton:
+            return sentences[0]
+        else:
+            return sentence
         #########################
