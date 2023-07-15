@@ -1,15 +1,38 @@
 import numpy as np
 import torch
+import os
 
 from pathlib import Path
+
+# Get the root directory path
 ROOT_DIR_PATH = Path(__file__).parent.absolute().resolve(strict=True)
 ROOT_DIR_PATH = str(ROOT_DIR_PATH) + '/'
 
-'''
-Framework Selection:
-'MaskRCNN'
-'AffNet'
-'''
+# Get the data directory paths
+COCO_ROOT_DATA_PATH = os.path.join(ROOT_DIR_PATH, 'data', 'COCO')
+UMD_ROOT_DATA_PATH = os.path.join(ROOT_DIR_PATH, 'data', 'UMD')
+ARL_ROOT_DATA_PATH = os.path.join(ROOT_DIR_PATH, 'data', 'ARLAffPose')
+YCB_DATASET_ROOT_PATH = os.path.join(ROOT_DIR_PATH, 'data', 'YCB_Affordance_Dataset')
+
+# Update the rest of the paths using relative paths or environment variables
+UMD_DATA_DIRECTORY = os.path.join('data', 'UMD', 'Real')
+UMD_DATA_DIRECTORY_TRAIN = os.path.join(UMD_DATA_DIRECTORY, 'train')
+UMD_DATA_DIRECTORY_VAL = os.path.join(UMD_DATA_DIRECTORY, 'val')
+UMD_DATA_DIRECTORY_TEST = os.path.join(UMD_DATA_DIRECTORY, 'test')
+
+ARL_DATA_DIRECTORY = os.path.join('data', 'ARLAffPose', 'Real')
+ARL_DATA_DIRECTORY_TRAIN = os.path.join(ARL_DATA_DIRECTORY, 'train')
+ARL_DATA_DIRECTORY_VAL = os.path.join(ARL_DATA_DIRECTORY, 'val')
+ARL_DATA_DIRECTORY_TEST = os.path.join('data', 'ARLAffPose', 'Real', 'test')
+ARL_DATA_DIRECTORY_WAM = os.path.join('data', 'ARLAffPose', 'WAM', 'test')
+
+ARL_SYN_DATA_DIRECTORY = os.path.join('data', 'ARLAffPose', 'Syn')
+ARL_SYN_DATA_DIRECTORY_TRAIN = os.path.join(ARL_SYN_DATA_DIRECTORY, 'train')
+ARL_SYN_DATA_DIRECTORY_VAL = os.path.join(ARL_SYN_DATA_DIRECTORY, 'val')
+ARL_SYN_DATA_DIRECTORY_TEST = os.path.join(ARL_SYN_DATA_DIRECTORY, 'test')
+
+YCB_TRAIN_FILE = os.path.join(ROOT_DIR_PATH, 'datasets', 'ycb', 'dataset_config', 'train_data_list.txt')
+YCB_TEST_FILE = os.path.join(ROOT_DIR_PATH, 'datasets', 'ycb', 'dataset_config', 'test_data_list.txt')
 
 # Prelim for naming experiment.
 FRAMEWORK = 'AffNet'
@@ -18,29 +41,24 @@ EXP_DOMAIN = 'Real'
 EXP_IMAGES = 'RGB'
 EXP_NUM = 'v3_syn_frozen_backbone'
 
-'''
-Backbone Selection:
-'resnet50'
-'resnet18'
-'''
-
+# Backbone Selection:
 BACKBONE_FEAT_EXTRACTOR = 'resnet50'
 
 IS_PRETRAINED = True
 RESNET_PRETRAINED_WEIGHTS = 'https://download.pytorch.org/models/resnet101-5d3b4d8f.pth'
 MASKRCNN_PRETRAINED_WEIGHTS = 'https://download.pytorch.org/models/maskrcnn_resnet50_fpn_coco-bf2d0c1e.pth'  # resnet50
 
-RESTORE_UMD_AFFNET_WEIGHTS = '/data/igunduz/weights/AffNet/UMD/UMD_Real_RGB/AffNet_UMD_Real_RGB_640x640_v4_imgaug/BEST_MODEL.pth'
+RESTORE_UMD_AFFNET_WEIGHTS = os.path.join('weights', 'AffNet', 'UMD', 'UMD_Real_RGB', 'AffNet_UMD_Real_RGB_640x640_v4_imgaug', 'BEST_MODEL.pth')
 
-RESTORE_ARL_TORCHVISION_MASKRCNN_WEIGHTS = ROOT_DIR_PATH + 'trained_models/ARL_AffPose_Real_RGB/MaskRCNN_ARLAffPose_Real_RGB_640x640_v0_torchvision/maskrcnn_epoch_4.pth'
+RESTORE_ARL_TORCHVISION_MASKRCNN_WEIGHTS = os.path.join(ROOT_DIR_PATH, 'trained_models', 'ARL_AffPose_Real_RGB', 'MaskRCNN_ARLAffPose_Real_RGB_640x640_v0_torchvision', 'maskrcnn_epoch_4.pth')
 
-RESTORE_ARL_MASKRCNN_WEIGHTS = '/data/igunduz/weights/AffNet/ARLAffPose/MaskRCNN/MaskRCNN_ARLAffPose_Real_RGB_640x640_v1_transpose_conv2d_28x28/BEST_MODEL.pth'
-RESTORE_SYN_ARL_MASKRCNN_WEIGHTS = '/data/igunduz/weights/AffNet/ARLAffPose/MaskRCNN/MaskRCNN_ARLAffPose_Syn_RGB_640x640_v3_syn_frozen_backbone/BEST_MODEL.pth'
-RESTORE_SYN_AND_REAL_ARL_MASKRCNN_WEIGHTS = '/data/igunduz/weights/AffNet/ARLAffPose/MaskRCNN/MaskRCNN_ARLAffPose_Real_and_Syn_RGB_640x640_v3_syn_frozen_backbone/BEST_MODEL.pth'
+RESTORE_ARL_MASKRCNN_WEIGHTS = os.path.join('weights', 'AffNet', 'ARLAffPose', 'MaskRCNN', 'MaskRCNN_ARLAffPose_Real_RGB_640x640_v1_transpose_conv2d_28x28', 'BEST_MODEL.pth')
+RESTORE_SYN_ARL_MASKRCNN_WEIGHTS = os.path.join('weights', 'AffNet', 'ARLAffPose', 'MaskRCNN', 'MaskRCNN_ARLAffPose_Syn_RGB_640x640_v3_syn_frozen_backbone', 'BEST_MODEL.pth')
+RESTORE_SYN_AND_REAL_ARL_MASKRCNN_WEIGHTS = os.path.join('weights', 'AffNet', 'ARLAffPose', 'MaskRCNN', 'MaskRCNN_ARLAffPose_Real_and_Syn_RGB_640x640_v3_syn_frozen_backbone', 'BEST_MODEL.pth')
 
-RESTORE_ARL_AFFNET_WEIGHTS = '/data/igunduz/weights/AffNet/ARLAffPose/AffNet/AffNet_ARLAffPose_Real_RGB_640x640_v1_transpose_conv2d_28x28/BEST_MODEL.pth'
-RESTORE_SYN_ARL_AFFNET_WEIGHTS = '/data/igunduz/weights/AffNet/ARLAffPose/AffNet/AffNet_ARLAffPose_Syn_RGB_640x640_v3_syn_frozen_backbone/affnet_epoch_1.pth'
-RESTORE_SYN_AND_REAL_ARL_AFFNET_WEIGHTS = '/data/igunduz/weights/AffNet/ARLAffPose/AffNet/AffNet_ARLAffPose_Real_and_Syn_RGB_640x640_v3_syn_frozen_backbone/BEST_MODEL.pth'
+RESTORE_ARL_AFFNET_WEIGHTS = os.path.join('weights', 'AffNet', 'ARLAffPose', 'AffNet', 'AffNet_ARLAffPose_Real_RGB_640x640_v1_transpose_conv2d_28x28', 'BEST_MODEL.pth')
+RESTORE_SYN_ARL_AFFNET_WEIGHTS = os.path.join('weights', 'AffNet', 'ARLAffPose', 'AffNet', 'AffNet_ARLAffPose_Syn_RGB_640x640_v3_syn_frozen_backbone', 'affnet_epoch_1.pth')
+RESTORE_SYN_AND_REAL_ARL_AFFNET_WEIGHTS = os.path.join('weights', 'AffNet', 'ARLAffPose', 'AffNet', 'AffNet_ARLAffPose_Real_and_Syn_RGB_640x640_v3_syn_frozen_backbone', 'BEST_MODEL.pth')
 
 ''' 
 MaskRCNN configs. 
@@ -50,6 +68,8 @@ see reference here https://www.telesens.co/2018/03/11/object-detection-and-class
 # Used to threshold predictions based on objectiveness.
 OBJ_CONFIDENCE_THRESHOLD = 0.7
 MASK_THRESHOLD = 0.5
+
+# ...
 
 # Anchor Generator
 ANCHOR_SIZES = (32, 64, 128, 256, 384)
@@ -88,57 +108,35 @@ BOX_SCORE_THRESH = 0.1
 BOX_NMS_THRESH = 0.6
 BOX_NUM_DETECTIONS = 10  # 200
 
-'''
-COCO Configs.
-'''
-
-COCO_ROOT_DATA_PATH = '/data/igunduz/Datasets/COCO/'
-COCO_TRAIN_SPLIT = 'train2017'
-COCO_VAL_SPLIT = 'val2017'
-
+# COCO Configs.
 COCO_NUM_CLASSES = 79 + 1
 
-COCO_TEST_SAVE_FOLDER = COCO_ROOT_DATA_PATH + 'test/'
-COCO_EVAL_SAVE_FOLDER = COCO_ROOT_DATA_PATH + 'pred/'
+COCO_TEST_SAVE_FOLDER = os.path.join(COCO_ROOT_DATA_PATH, 'test/')
+COCO_EVAL_SAVE_FOLDER = os.path.join(COCO_ROOT_DATA_PATH, 'pred/')
 
-'''
-UMD Configs.
-'''
-
-UMD_ROOT_DATA_PATH = '/data/igunduz/Datasets/UMD/'
-
+# UMD Configs.
 UMD_NUM_CLASSES = 17 + 1
 UMD_NUM_OBJECT_CLASSES = 17 + 1  # 1 is for the background
 UMD_NUM_AFF_CLASSES = 7 + 1  # 1 is for the background
 
 UMD_IMAGE_MEAN = [148.06817006/255, 175.72064619/255, 164.09241116]
 UMD_IMAGE_STD = [19.12525118/255, 34.56108673/255, 30.58577597]
-UMD_RESIZE = (int(480), int(640))  # (int(640), int(480))
-UMD_CROP_SIZE = (int(480), int(640))  # (int(640), int(480))
+UMD_RESIZE = (int(480), int(640))
+UMD_CROP_SIZE = (int(480), int(640))
 UMD_MIN_SIZE = 600
 UMD_MAX_SIZE = 1000
 
-UMD_DATA_DIRECTORY = UMD_ROOT_DATA_PATH + 'Real/'
-UMD_DATA_DIRECTORY_TRAIN = UMD_DATA_DIRECTORY + 'train/'
-UMD_DATA_DIRECTORY_VAL = UMD_DATA_DIRECTORY + 'val/'
-UMD_DATA_DIRECTORY_TEST = UMD_DATA_DIRECTORY + 'test/'
+UMD_DATA_DIRECTORY = os.path.join(UMD_ROOT_DATA_PATH, 'Real/')
+UMD_DATA_DIRECTORY_TRAIN = os.path.join(UMD_DATA_DIRECTORY, 'train/')
+UMD_DATA_DIRECTORY_VAL = os.path.join(UMD_DATA_DIRECTORY, 'val/')
+UMD_DATA_DIRECTORY_TEST = os.path.join(UMD_DATA_DIRECTORY, 'test/')
 
-# UMD_SYN_DATA_DIRECTORY = UMD_ROOT_DATA_PATH + 'Syn/'
-# UMD_SYN_DATA_DIRECTORY_TRAIN = UMD_SYN_DATA_DIRECTORY + 'train/'
-# UMD_SYN_DATA_DIRECTORY_VAL = UMD_SYN_DATA_DIRECTORY + 'val/'
-# UMD_SYN_DATA_DIRECTORY_TEST = UMD_SYN_DATA_DIRECTORY + 'test/'
-
-UMD_TEST_SAVE_FOLDER = UMD_DATA_DIRECTORY_TEST + 'test/'
-UMD_AFF_EVAL_SAVE_FOLDER = UMD_DATA_DIRECTORY_TEST + 'pred_aff/'
+UMD_TEST_SAVE_FOLDER = os.path.join(UMD_DATA_DIRECTORY_TEST, 'test/')
+UMD_AFF_EVAL_SAVE_FOLDER = os.path.join(UMD_DATA_DIRECTORY_TEST, 'pred_aff/')
 
 IMG_SIZE = str(UMD_CROP_SIZE[0]) + 'x' + str(UMD_CROP_SIZE[1])
 
-'''
-ARL AffPose Configs.
-'''
-
-ARL_ROOT_DATA_PATH = '/data/igunduz/Datasets/ARLAffPose/'
-
+# ARL AffPose Configs.
 ARL_NUM_CLASSES = 11 + 1
 ARL_NUM_OBJECT_CLASSES = 11 + 1  # 1 is for the background
 ARL_NUM_AFF_CLASSES = 9 + 1  # 1 is for the background
@@ -148,33 +146,29 @@ ARL_IMAGE_STD = [56.62171952/255, 56.86680141/255, 36.95978531/255]
 ARL_RESIZE = (int(1280/1), int(720/1))
 ARL_CROP_SIZE = (int(640), int(640))
 
-ARL_DATA_DIRECTORY = ARL_ROOT_DATA_PATH + 'Real/'
-ARL_DATA_DIRECTORY_TRAIN = ARL_DATA_DIRECTORY + 'train/'
-ARL_DATA_DIRECTORY_VAL = ARL_DATA_DIRECTORY + 'val/'
-ARL_DATA_DIRECTORY_TEST = ARL_ROOT_DATA_PATH + 'Real/' + 'test/'
-ARL_DATA_DIRECTORY_WAM = ARL_ROOT_DATA_PATH + 'WAM/' + 'test/'
+ARL_DATA_DIRECTORY = os.path.join(ARL_ROOT_DATA_PATH, 'Real/')
+ARL_DATA_DIRECTORY_TRAIN = os.path.join(ARL_DATA_DIRECTORY, 'train/')
+ARL_DATA_DIRECTORY_VAL = os.path.join(ARL_DATA_DIRECTORY, 'val/')
+ARL_DATA_DIRECTORY_TEST = os.path.join(ARL_ROOT_DATA_PATH, 'Real/', 'test/')
+ARL_DATA_DIRECTORY_WAM = os.path.join(ARL_ROOT_DATA_PATH, 'WAM/', 'test/')
 
-ARL_SYN_DATA_DIRECTORY = ARL_ROOT_DATA_PATH + 'Syn/'
-ARL_SYN_DATA_DIRECTORY_TRAIN = ARL_SYN_DATA_DIRECTORY + 'train/'
-ARL_SYN_DATA_DIRECTORY_VAL = ARL_SYN_DATA_DIRECTORY + 'val/'
-ARL_SYN_DATA_DIRECTORY_TEST = ARL_SYN_DATA_DIRECTORY + 'test/'
+ARL_SYN_DATA_DIRECTORY = os.path.join(ARL_ROOT_DATA_PATH, 'Syn/')
+ARL_SYN_DATA_DIRECTORY_TRAIN = os.path.join(ARL_SYN_DATA_DIRECTORY, 'train/')
+ARL_SYN_DATA_DIRECTORY_VAL = os.path.join(ARL_SYN_DATA_DIRECTORY, 'val/')
+ARL_SYN_DATA_DIRECTORY_TEST = os.path.join(ARL_SYN_DATA_DIRECTORY, 'test/')
 
-ARL_TEST_SAVE_FOLDER = ARL_DATA_DIRECTORY_TEST + 'test/'
-ARL_OBJ_EVAL_SAVE_FOLDER = ARL_DATA_DIRECTORY_TEST + 'pred_obj/'
-ARL_AFF_EVAL_SAVE_FOLDER = ARL_DATA_DIRECTORY_TEST + 'pred_aff/'
+ARL_TEST_SAVE_FOLDER = os.path.join(ARL_DATA_DIRECTORY_TEST, 'test/')
+ARL_OBJ_EVAL_SAVE_FOLDER = os.path.join(ARL_DATA_DIRECTORY_TEST, 'pred_obj/')
+ARL_AFF_EVAL_SAVE_FOLDER = os.path.join(ARL_DATA_DIRECTORY_TEST, 'pred_aff/')
 
 ARL_IMG_SIZE = str(ARL_CROP_SIZE[0]) + 'x' + str(ARL_CROP_SIZE[1])
 
-'''
-YCB Video Configs.
-'''
-
-YCB_DATASET_ROOT_PATH = '/data/igunduz/Datasets/YCB_Affordance_Dataset'
+# YCB Video Configs.
 YCB_IMAGE_DOMAIN = 'Real'
 
-DENSEFUSION_ROOT_PATH = '/home/igunduz/git/DenseFusion/'
-YCB_TRAIN_FILE = DENSEFUSION_ROOT_PATH + 'datasets/ycb/dataset_config/train_data_list.txt'
-YCB_TEST_FILE = DENSEFUSION_ROOT_PATH + 'datasets/ycb/dataset_config/test_data_list.txt'
+DENSEFUSION_ROOT_PATH = os.path.join(ROOT_DIR_PATH, 'DenseFusion/')
+YCB_TRAIN_FILE = os.path.join(DENSEFUSION_ROOT_PATH, 'datasets/ycb/dataset_config/train_data_list.txt')
+YCB_TEST_FILE = os.path.join(DENSEFUSION_ROOT_PATH, 'datasets/ycb/dataset_config/test_data_list.txt')
 
 YCB_NUM_CLASSES = 21 + 1
 YCB_NUM_OBJECT_CLASSES = 21 + 1  # 1 is for the background
@@ -185,15 +179,11 @@ YCB_IMAGE_STD = [56.62171952/255, 56.86680141/255, 36.95978531/255]
 YCB_RESIZE = (int(640), int(640))
 YCB_CROP_SIZE = (int(640), int(640))
 
-YCB_TEST_SAVE_FOLDER = YCB_DATASET_ROOT_PATH + '/test/'
-YCB_OBJ_EVAL_SAVE_FOLDER = YCB_DATASET_ROOT_PATH + '/pred_obj/'
-YCB_AFF_EVAL_SAVE_FOLDER = YCB_DATASET_ROOT_PATH + '/pred_aff/'
+YCB_TEST_SAVE_FOLDER = os.path.join(YCB_DATASET_ROOT_PATH, 'test/')
+YCB_OBJ_EVAL_SAVE_FOLDER = os.path.join(YCB_DATASET_ROOT_PATH, 'pred_obj/')
+YCB_AFF_EVAL_SAVE_FOLDER = os.path.join(YCB_DATASET_ROOT_PATH, 'pred_aff/')
 
-'''
-Hyperparams.
-'''
-
-# train on the GPU or on the CPU, if a GPU is not available
+# Hyperparams.
 CPU_DEVICE = 'cpu'
 DEVICE = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
 print("using device: {} ..".format(DEVICE))
@@ -227,20 +217,19 @@ MAX_SIZE = UMD_MAX_SIZE
 IMAGE_MEAN = UMD_IMAGE_MEAN
 IMAGE_STD = UMD_IMAGE_STD
 
-''' 
-Configs for logging & eval.
-'''
+# ...
 
 # Logging.
 EXP_DATASET_NAME = f'{EXP_DATASET}_{EXP_DOMAIN}_{EXP_IMAGES}'
 EXP_NAME = FRAMEWORK + '_' + EXP_DATASET_NAME + '_' + ARL_IMG_SIZE + '_' + EXP_NUM
-TRAINED_MODELS_DIR = str(ROOT_DIR_PATH) + 'trained_models/' + EXP_DATASET_NAME + '/' + EXP_NAME
-MODEL_SAVE_PATH = str(TRAINED_MODELS_DIR) + '/'
-BEST_MODEL_SAVE_PATH = MODEL_SAVE_PATH + 'BEST_MODEL.pth'
+TRAINED_MODELS_DIR = os.path.join(ROOT_DIR_PATH, 'trained_models', EXP_DATASET_NAME, EXP_NAME)
+MODEL_SAVE_PATH = os.path.join(TRAINED_MODELS_DIR, '')
+BEST_MODEL_SAVE_PATH = os.path.join(MODEL_SAVE_PATH, 'BEST_MODEL.pth')
 
 # Eval.
-MATLAB_SCRIPTS_DIR = np.str(ROOT_DIR_PATH + 'matlab/')
+MATLAB_SCRIPTS_DIR = os.path.join(ROOT_DIR_PATH, 'matlab/')
 
 TEST_GT_EXT = "_gt.png"
 TEST_PRED_EXT = "_pred.png"
 TEST_OBJ_PART_EXT = "_obj_part.png"
+
