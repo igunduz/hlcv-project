@@ -1,10 +1,21 @@
 from torch.utils.data import Dataset
+import torch
+import torchvision.transforms as transforms
 
 import os
 from os.path import join as ospj
 from PIL import Image
 import numpy as np
 import matplotlib.pyplot as plt
+import logging
+
+# Configure the logging settings
+logging.basicConfig(level=logging.DEBUG,  # Set the logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL)
+                    format='%(asctime)s - %(levelname)s - %(message)s',
+                    filename='app.log',  # Output log messages to a file (optional)
+                    filemode='w')
+
+logger = logging.getLogger()
 
 background = [200, 222, 250]
 c1 = [0,0,205]   
@@ -52,7 +63,7 @@ def parse_affordance_labels(affordance_filename):
         count = 0
         for digit in digits:
             if digit.isdigit():
-                if int(digit) < 0 or int(digit) > 12:
+                if int(digit) < 0 or int(digit) > (len(label_colours) - 1):
                     digit = 0
                 row_pixels.append(digit)
                 count += 1
@@ -61,8 +72,13 @@ def parse_affordance_labels(affordance_filename):
             
     # dimensions = [dim1, dim2]
     affordance_pixels = np.array(affordance_pixels, dtype=np.uint8)
+    for i in range(dim1):
+        for j in range(dim2):
+            if affordance_pixels[i][j] < 0 or affordance_pixels[i][j] > 12:
+                logger.info(f"Negative Value: {affordance_pixels[i][j]}")
+
     seg_map = label_colours[affordance_pixels]
-    seg_map = np.array(seg_map, dtype=np.uint8)
+    seg_map = torch.tensor(seg_map).reshape(3, dim1, dim2)
     
     # print(seg_map.shape)
 
@@ -70,18 +86,22 @@ def parse_affordance_labels(affordance_filename):
     # plt.show()
 
     # Normalize the data to be in the range [0, 1]
-    seg_map_normalized = seg_map.astype(np.float32) / 255.0
+    seg_map_normalized = seg_map / 255.0
 
     # Convert the normalized 3D NumPy array to a PIL image
-    seg_map_img = Image.fromarray((seg_map_normalized * 255).astype(np.uint8))
+    # seg_map_img = transforms.ToPILImage()((seg_map_normalized * 255).to(torch.int))
+    seg_map_img = transforms.ToPILImage()(seg_map_normalized)
     return seg_map_img
 
 def parse_object_labels(object_filename):
-    with open(object_filename, "r") as f:
-        object_labels = f.readlines()
-        for i in range(len(object_labels)):
-            object_labels[i] = object_labels[i].strip()
-    return object_labels
+    with open(object_filename, 'r') as file:
+        lines = file.readlines()
+
+    # Split each line into individual values and convert them to integers
+    object_labels = [list(map(int, line.strip().split())) for line in lines]
+
+    # Convert the data to a PyTorch tensor
+    return torch.tensor(object_labels)
 
 class AffordanceDataset(Dataset):
     def __init__(self, root_dir, split_file, feature_extractor=None, transform=None):
@@ -100,6 +120,7 @@ class AffordanceDataset(Dataset):
         # Load RGB image
         image_filename = ospj(self.root_dir, "rgb", self.image_filenames[idx])
         image = Image.open(image_filename).convert("RGB")
+        np_image = np.array(image)
 
         # Load Affordance Label
         affordance_file = self.image_filenames[idx].replace(".jpg", ".txt")
@@ -113,12 +134,19 @@ class AffordanceDataset(Dataset):
 
         # Apply transformations if provided
         if self.transform is not None:
-            image = self.transform(image)
+            tensor_image = self.transform(Image.fromarray(np_image))
             affordances_labels = self.transform(affordances_labels)
+
+        logger.info(f"Image: {image_filename}")
+        logger.info(f"Image size: {tensor_image.shape}")
+        logger.info(f"Affordance mask size: {affordances_labels.shape}")
 
         # Extract features if feature_extractor is provided
         if self.feature_extractor is not None:
-            encoded_input = self.feature_extractor(image, affordances_labels, return_tensors="pt")
+            encoded_inputs = self.feature_extractor(image, affordances_labels, return_tensors="pt")
+            for k,v in encoded_inputs.items():
+                encoded_inputs[k].squeeze_()
         
-        return {"image": image, "affordances_labels": affordances_labels, "objects_labels": object_labels, "encoded_input": encoded_input}
+        # return {"image": tensor_image, "affordances_labels": affordances_labels, "objects_labels": object_labels, "encoded_input": encoded_inputs}
+        return {"image": tensor_image, "affordances_labels": affordances_labels, "encoded_input": encoded_inputs}
         
