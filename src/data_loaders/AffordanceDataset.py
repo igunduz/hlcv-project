@@ -103,6 +103,31 @@ def parse_object_labels(object_filename):
     # Convert the data to a PyTorch tensor
     return torch.tensor(object_labels)
 
+def collate_fn(batch):
+    images = [item["image"] for item in batch]
+    affordances_labels = [item["affordances_labels"] for item in batch]
+    encoded_inputs = [item["encoded_input"] for item in batch]
+
+    # Pad images to the same size
+    max_width = max(image.shape[-1] for image in images)
+    max_height = max(image.shape[-2] for image in images)
+
+    padded_images = [
+        F.pad(image, (0, max_width - image.shape[-1], 0, max_height - image.shape[-2]))
+        for image in images
+    ]
+    padded_images = torch.stack(padded_images)
+
+    # Stack the affordances labels
+    for k in encoded_inputs[0].keys():
+        encoded_inputs[k] = torch.stack([item[k] for item in encoded_inputs])
+
+    return {
+        "image": padded_images,
+        "affordances_labels": torch.stack(affordances_labels),
+        "encoded_input": encoded_inputs
+    }
+
 class AffordanceDataset(Dataset):
     def __init__(self, root_dir, split_file, feature_extractor=None, transform=None):
         self.root_dir = root_dir
