@@ -70,26 +70,16 @@ def parse_affordance_labels(affordance_filename):
         assert count==dim2, f"Actual count: {count}"
         affordance_pixels.append(row_pixels)
             
-    # dimensions = [dim1, dim2]
     affordance_pixels = np.array(affordance_pixels, dtype=np.uint8)
-    for i in range(dim1):
-        for j in range(dim2):
-            if affordance_pixels[i][j] < 0 or affordance_pixels[i][j] > 12:
-                logger.info(f"Negative Value: {affordance_pixels[i][j]}")
 
     seg_map = label_colours[affordance_pixels]
-    seg_map = torch.tensor(seg_map).reshape(3, dim1, dim2)
+    seg_map = torch.tensor(seg_map, dtype=torch.uint8).reshape(dim1, dim2, 3).permute(2, 0, 1)
     
-    # print(seg_map.shape)
-
-    # plt.imshow(seg_map)
-    # plt.show()
 
     # Normalize the data to be in the range [0, 1]
     seg_map_normalized = seg_map / 255.0
 
     # Convert the normalized 3D NumPy array to a PIL image
-    # seg_map_img = transforms.ToPILImage()((seg_map_normalized * 255).to(torch.int))
     seg_map_img = transforms.ToPILImage()(seg_map_normalized)
     return seg_map_img
 
@@ -103,30 +93,49 @@ def parse_object_labels(object_filename):
     # Convert the data to a PyTorch tensor
     return torch.tensor(object_labels)
 
-def collate_fn(batch):
-    images = [item["image"] for item in batch]
-    affordances_labels = [item["affordances_labels"] for item in batch]
-    encoded_inputs = [item["encoded_input"] for item in batch]
+# def collate_fn(batch):
+#     images = [item["image"] for item in batch]
+#     affordances_labels = [item["affordances_labels"] for item in batch]
+#     # object_labels = [item["object_labels"] for item in batch]
+#     encoded_inputs = [item["encoded_input"] for item in batch]
 
-    # Pad images to the same size
-    max_width = max(image.shape[-1] for image in images)
-    max_height = max(image.shape[-2] for image in images)
+#     # Pad images to the same size
+#     max_width = max(image.shape[-1] for image in images)
+#     max_height = max(image.shape[-2] for image in images)
 
-    padded_images = [
-        F.pad(image, (0, max_width - image.shape[-1], 0, max_height - image.shape[-2]))
-        for image in images
-    ]
-    padded_images = torch.stack(padded_images)
+#     padded_images = [
+#         F.pad(image, (0, max_width - image.shape[-1], 0, max_height - image.shape[-2]))
+#         for image in images
+#     ]
+#     padded_images = torch.stack(padded_images)
 
-    # Stack the affordances labels
-    for k in encoded_inputs[0].keys():
-        encoded_inputs[k] = torch.stack([item[k] for item in encoded_inputs])
+#     # # Pad affordances labels to the same size
+#     # max_width = max(label.shape[-1] for label in affordances_labels)
+#     # max_height = max(label.shape[-2] for label in affordances_labels)
+#     # padded_affordances_labels = [
+#     #     F.pad(label, (0, max_width - label.shape[-1], 0, max_height - label.shape[-2]))
+#     #     for label in affordances_labels
+#     # ]
+#     # padded_affordances_labels = torch.stack(padded_affordances_labels)
 
-    return {
-        "image": padded_images,
-        "affordances_labels": torch.stack(affordances_labels),
-        "encoded_input": encoded_inputs
-    }
+#     # Pad objects labels to the same size
+#     # max_width = max(label.shape[-1] for label in object_labels)
+#     # max_height = max(label.shape[-2] for label in object_labels)
+#     # padded_object_labels = [
+#     #     F.pad(label, (0, max_width - label.shape[-1], 0, max_height - label.shape[-2]))
+#     #     for label in object_labels
+#     # ]
+
+#     # Stack the affordances labels
+#     # for k in encoded_inputs[0].keys():
+#     #     encoded_inputs[k] = torch.stack([item[k] for item in encoded_inputs])
+
+#     return {
+#         "image": padded_images,
+#         "affordances_labels": affordances_labels,
+#         # "object_labels": torch.stack(padded_object_labels),
+#         "encoded_input": encoded_inputs
+#     }
 
 class AffordanceDataset(Dataset):
     def __init__(self, root_dir, split_file, feature_extractor=None, transform=None):
@@ -162,16 +171,19 @@ class AffordanceDataset(Dataset):
             tensor_image = self.transform(Image.fromarray(np_image))
             affordances_labels = self.transform(affordances_labels)
 
-        logger.info(f"Image: {image_filename}")
-        logger.info(f"Image size: {tensor_image.shape}")
-        logger.info(f"Affordance mask size: {affordances_labels.shape}")
+        print(f"Object Labels: {object_labels.shape}")
+
+        pil_image = transforms.ToPILImage()(tensor_image).convert("RGB")
+        pil_affordances_labels = transforms.ToPILImage()(affordances_labels).convert("RGB")
 
         # Extract features if feature_extractor is provided
         if self.feature_extractor is not None:
-            encoded_inputs = self.feature_extractor(image, affordances_labels, return_tensors="pt")
+            encoded_inputs = self.feature_extractor(pil_image, pil_affordances_labels, return_tensors="pt")
             for k,v in encoded_inputs.items():
                 encoded_inputs[k].squeeze_()
+
+        logger.info(f"Encoded Inputs: {encoded_inputs}")
         
-        # return {"image": tensor_image, "affordances_labels": affordances_labels, "objects_labels": object_labels, "encoded_input": encoded_inputs}
-        return {"image": tensor_image, "affordances_labels": affordances_labels, "encoded_input": encoded_inputs}
+        return {"image": tensor_image, "affordances_labels": affordances_labels, "object_labels": object_labels, "encoded_input": encoded_inputs}
+        # return {"image": tensor_image, "affordances_labels": affordances_labels, "encoded_input": encoded_inputs}
         
