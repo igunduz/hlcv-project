@@ -33,7 +33,7 @@ c9 = [0,134,141]
 label_colours = np.array([background, c1, c2, c3, c4, c5, c6, c7, c8, c9])
 # , c10, c11, c12])
 
-affordances = np.array(["background", "contain", "cut", "display", "engine", "grasp", "hit", "pound", "support", "w-grasp"])
+affordances = np.array(["contain", "cut", "display", "engine", "grasp", "hit", "pound", "support", "w-grasp"])
 
 # Object
 col0 = [0, 0, 0]
@@ -82,9 +82,15 @@ def parse_affordance_labels(affordance_filename):
     # Normalize the data to be in the range [0, 1]
     seg_map_normalized = seg_map / 255.0
 
+    # Experimenting with Affordance pixel grid
+    affordance_pixels = torch.from_numpy(affordance_pixels).reshape(dim1, dim2)
+    # affordance_pixels_normalized = affordance_pixels / 10.0
+    # affordance_pixels_normalized = transforms.ToPILImage()(affordance_pixels)
+    logger.info(f"Shape of affordance_pixels: {affordance_pixels.shape}")
+
     # Convert the normalized 3D NumPy array to a PIL image
     seg_map_img = transforms.ToPILImage()(seg_map_normalized)
-    return seg_map_img
+    return seg_map_img, affordance_pixels
 
 def parse_object_labels(object_filename):
     with open(object_filename, 'r') as file:
@@ -107,6 +113,7 @@ class AffordanceDataset(Dataset):
             self.image_filenames = [line.strip() for line in f]
 
         self.id2label = {i:label for i, label in enumerate(affordances.tolist())}
+        self.id2label[255] = "background"
 
     def __len__(self):
         return len(self.image_filenames)
@@ -120,7 +127,7 @@ class AffordanceDataset(Dataset):
         # Load Affordance Label
         affordance_file = self.image_filenames[idx].replace(".jpg", ".txt")
         affordance_filename = ospj(self.root_dir, "affordances_labels", affordance_file)
-        affordances_labels = parse_affordance_labels(affordance_filename)
+        affordance_rgb, affordance_labels = parse_affordance_labels(affordance_filename)
 
         # Load Object Label
         object_file = self.image_filenames[idx].replace(".jpg", ".txt")
@@ -130,17 +137,22 @@ class AffordanceDataset(Dataset):
         # Apply transformations if provided
         if self.transform is not None:
             tensor_image = self.transform(Image.fromarray(np_image))
-            affordances_labels = self.transform(affordances_labels)
+            affordance_rgb = self.transform(affordance_rgb)
 
         pil_image = transforms.ToPILImage()(tensor_image).convert("RGB")
-        pil_affordances_labels = transforms.ToPILImage()(affordances_labels).convert("RGB")
+        pil_affordance_rgb = transforms.ToPILImage()(affordance_rgb).convert("RGB")
 
         # Extract features if feature_extractor is provided
         if self.feature_extractor is not None:
-            encoded_inputs = self.feature_extractor(pil_image, pil_affordances_labels, return_tensors="pt")
+            # logger.info(f"Shape of image: {pil_image.size}")
+            # logger.info(f"Shape of affordance_labels: {affordance_labels.size}")
+            encoded_inputs = self.feature_extractor(pil_image, affordance_labels, return_tensors="pt")
+            logger.info(f"Encoded mask: {encoded_inputs['labels'].shape}")
             for k,v in encoded_inputs.items():
+                # logger.info(f"Shape of {k}: {v.shape}")
                 encoded_inputs[k].squeeze_()
                 logger.info(f"Shape of {k}: {v.shape}")
         
         
-        return {"image": tensor_image, "affordances_labels": affordances_labels, "object_labels": object_labels, "encoded_input": encoded_inputs}
+        # return {"image": tensor_image, "affordance_rgb": affordance_rgb, "object_labels": object_labels, "encoded_input": encoded_inputs}
+        return encoded_inputs

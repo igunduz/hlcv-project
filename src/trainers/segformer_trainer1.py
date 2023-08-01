@@ -21,6 +21,8 @@ class SegformerFinetuner(pl.LightningModule):
         self.num_classes = len(self.id2label.keys())
         self.label2id = {v:k for k,v in self.id2label.items()}
 
+        self.validation_step_outputs = []
+
         print(f"id2label: {self.id2label.keys()}")
         print(f"label2id: {self.label2id.keys()}")
         print(f"id2label: {type(self.id2label)}")
@@ -45,6 +47,7 @@ class SegformerFinetuner(pl.LightningModule):
         return(outputs)
     
     def training_step(self, batch, batch_nb):
+        torch.cuda.empty_cache()
         
         images, masks = batch['pixel_values'], batch['labels']
         
@@ -83,6 +86,8 @@ class SegformerFinetuner(pl.LightningModule):
             return({'loss': loss})
     
     def validation_step(self, batch, batch_nb):
+    # def validation_step(self, batch):
+        torch.cuda.empty_cache()
         
         images, masks = batch['pixel_values'], batch['labels']
         
@@ -103,17 +108,19 @@ class SegformerFinetuner(pl.LightningModule):
             predictions=predicted.detach().cpu().numpy(), 
             references=masks.detach().cpu().numpy()
         )
+
+        self.validation_step_outputs.append(loss)
         
         return({'val_loss': loss})
     
-    def validation_epoch_end(self, outputs):
+    def on_validation_epoch_end(self):
         metrics = self.val_mean_iou.compute(
               num_labels=self.num_classes, 
               ignore_index=255, 
               reduce_labels=False,
-          )
+            )
         
-        avg_val_loss = torch.stack([x["val_loss"] for x in outputs]).mean()
+        avg_val_loss = torch.stack([x["val_loss"] for x in self.validation_step_outputs]).mean()
         val_mean_iou = metrics["mean_iou"]
         val_mean_accuracy = metrics["mean_accuracy"]
         
@@ -121,9 +128,12 @@ class SegformerFinetuner(pl.LightningModule):
         for k,v in metrics.items():
             self.log(k,v)
 
+        self.validation_step_outputs.clear()
+
         return metrics
     
     def test_step(self, batch, batch_nb):
+        torch.cuda.empty_cache()
         
         images, masks = batch['pixel_values'], batch['labels']
         
