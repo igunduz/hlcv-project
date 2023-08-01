@@ -168,7 +168,7 @@ class SegformerFinetuner(pl.LightningModule):
         test_mean_iou = metrics["mean_iou"]
         test_mean_accuracy = metrics["mean_accuracy"]
 
-        metrics = {"test_loss": avg_test_loss, "test_mean_iou":test_mean_iou, "test_mean_accuracy":test_mean_accuracy}
+        metrics = {"test_loss":avg_test_loss, "test_mean_iou":test_mean_iou, "test_mean_accuracy":test_mean_accuracy}
         
         for k,v in metrics.items():
             self.log(k,v)
