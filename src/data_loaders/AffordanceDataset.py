@@ -27,10 +27,13 @@ c6 = [204,102,0]
 c7 = [184,134,11] 
 c8 = [0,153,153]
 c9 = [0,134,141]
-c10 = [184,0,141] 
-c11 = [184,134,0] 
-c12 = [184,134,223]
-label_colours = np.array([background, c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11, c12])
+# c10 = [184,0,141] 
+# c11 = [184,134,0] 
+# c12 = [184,134,223]
+label_colours = np.array([background, c1, c2, c3, c4, c5, c6, c7, c8, c9])
+# , c10, c11, c12])
+
+affordances = np.array(["background", "contain", "cut", "display", "engine", "grasp", "hit", "pound", "support", "w-grasp"])
 
 # Object
 col0 = [0, 0, 0]
@@ -93,50 +96,6 @@ def parse_object_labels(object_filename):
     # Convert the data to a PyTorch tensor
     return torch.tensor(object_labels)
 
-# def collate_fn(batch):
-#     images = [item["image"] for item in batch]
-#     affordances_labels = [item["affordances_labels"] for item in batch]
-#     # object_labels = [item["object_labels"] for item in batch]
-#     encoded_inputs = [item["encoded_input"] for item in batch]
-
-#     # Pad images to the same size
-#     max_width = max(image.shape[-1] for image in images)
-#     max_height = max(image.shape[-2] for image in images)
-
-#     padded_images = [
-#         F.pad(image, (0, max_width - image.shape[-1], 0, max_height - image.shape[-2]))
-#         for image in images
-#     ]
-#     padded_images = torch.stack(padded_images)
-
-#     # # Pad affordances labels to the same size
-#     # max_width = max(label.shape[-1] for label in affordances_labels)
-#     # max_height = max(label.shape[-2] for label in affordances_labels)
-#     # padded_affordances_labels = [
-#     #     F.pad(label, (0, max_width - label.shape[-1], 0, max_height - label.shape[-2]))
-#     #     for label in affordances_labels
-#     # ]
-#     # padded_affordances_labels = torch.stack(padded_affordances_labels)
-
-#     # Pad objects labels to the same size
-#     # max_width = max(label.shape[-1] for label in object_labels)
-#     # max_height = max(label.shape[-2] for label in object_labels)
-#     # padded_object_labels = [
-#     #     F.pad(label, (0, max_width - label.shape[-1], 0, max_height - label.shape[-2]))
-#     #     for label in object_labels
-#     # ]
-
-#     # Stack the affordances labels
-#     # for k in encoded_inputs[0].keys():
-#     #     encoded_inputs[k] = torch.stack([item[k] for item in encoded_inputs])
-
-#     return {
-#         "image": padded_images,
-#         "affordances_labels": affordances_labels,
-#         # "object_labels": torch.stack(padded_object_labels),
-#         "encoded_input": encoded_inputs
-#     }
-
 class AffordanceDataset(Dataset):
     def __init__(self, root_dir, split_file, feature_extractor=None, transform=None):
         self.root_dir = root_dir
@@ -146,6 +105,8 @@ class AffordanceDataset(Dataset):
         # Read the split file (e.g., train_and_val.txt or val.txt) to get the list of image filenames
         with open(os.path.join(self.root_dir, split_file), "r") as f:
             self.image_filenames = [line.strip() for line in f]
+
+        self.id2label = {i:label for i, label in enumerate(affordances.tolist())}
 
     def __len__(self):
         return len(self.image_filenames)
@@ -171,8 +132,6 @@ class AffordanceDataset(Dataset):
             tensor_image = self.transform(Image.fromarray(np_image))
             affordances_labels = self.transform(affordances_labels)
 
-        print(f"Object Labels: {object_labels.shape}")
-
         pil_image = transforms.ToPILImage()(tensor_image).convert("RGB")
         pil_affordances_labels = transforms.ToPILImage()(affordances_labels).convert("RGB")
 
@@ -181,9 +140,7 @@ class AffordanceDataset(Dataset):
             encoded_inputs = self.feature_extractor(pil_image, pil_affordances_labels, return_tensors="pt")
             for k,v in encoded_inputs.items():
                 encoded_inputs[k].squeeze_()
-
-        logger.info(f"Encoded Inputs: {encoded_inputs}")
+                logger.info(f"Shape of {k}: {v.shape}")
+        
         
         return {"image": tensor_image, "affordances_labels": affordances_labels, "object_labels": object_labels, "encoded_input": encoded_inputs}
-        # return {"image": tensor_image, "affordances_labels": affordances_labels, "encoded_input": encoded_inputs}
-        
