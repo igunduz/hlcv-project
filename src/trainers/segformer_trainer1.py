@@ -8,6 +8,8 @@ from torch import nn
 
 import numpy as np
 
+# Referred to https://blog.roboflow.com/how-to-train-segformer-on-a-custom-dataset-with-pytorch-lightning/#create-a-dataset
+
 class SegformerFinetuner(pl.LightningModule):
     
     def __init__(self, id2label, train_dataloader=None, val_dataloader=None, test_dataloader=None, metrics_interval=100):
