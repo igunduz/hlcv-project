@@ -1,22 +1,33 @@
 import torch
 import torch.nn as nn
+import pytorch_lightning as pl
+import numpy as np
 
+from transformers import SegformerForSemanticSegmentation
+from torchvision.utils import make_grid
 from tqdm import tqdm
 
 from .base_trainer import BaseTrainer
 from utils import MetricTracker
+from datasets import load_metric
 
-class SegFormerTrainer(BaseTrainer):
+class SegFormerTrainer(pl.LightningModule, BaseTrainer):
 
-    def __init__(self, config, train_loader, eval_loader=None):
+    def __init__(self, config, model, train_loader, val_loader=None):
         """
         Create the model, loss criterion, optimizer, and dataloaders
         And anything else that might be needed during training. (e.g. device type)
         """
-        super().__init__(config)
+        super(SegFormerTrainer, self).__init__()
 
         # build model architecture, then print to console
-        # self.model = config.init_obj('arch', module_arch) # Either pass model or use cfg to create model
+        # Remember to freeze a certain part of the model
+        self.model = model
+        # self.model = SegformerForSemanticSegmentation.from_pretrained(
+        #     "nvidia/segformer-b0-finetuned-ade-512-512",
+        #     return_dict=False,
+
+        # )
         self.model.to(self._device)
         if len(self._device_ids) > 1:
             self.model = torch.nn.DataParallel(self.model, device_ids=self._device_ids)
@@ -28,17 +39,17 @@ class SegFormerTrainer(BaseTrainer):
         self.logger.info(self.model)
 
         # Prepare Losses
-        # self.criterion = getattr(module_loss, config['loss']) # Define loss function
+        self.criterion = getattr(module_loss, config['loss']) # Define loss function
 
         # Prepare Optimizer
-        # trainable_params = filter(lambda p: p.requires_grad, self.model.parameters()) # Get all trainable parameters
-        # self.optimizer = config.init_obj('optimizer', torch.optim, trainable_params) # Define optimizer
+        trainable_params = filter(lambda p: p.requires_grad, self.model.parameters()) # Get all trainable parameters
+        self.optimizer = config.init_obj('optimizer', torch.optim, trainable_params) # Define optimizer
 
-        # self.lr_scheduler = config.init_obj('lr_scheduler', torch.optim.lr_scheduler, self.optimizer) # Define learning rate scheduler
+        self.lr_scheduler = config.init_obj('lr_scheduler', torch.optim.lr_scheduler, self.optimizer) # Define learning rate scheduler
 
         # Set DataLoaders from the DataLoader class
         self._train_loader = train_loader
-        self._eval_loader = eval_loader
+        self._val_loader = val_loader
 
         self.log_step = 100 # arbitrary
 
@@ -46,6 +57,8 @@ class SegFormerTrainer(BaseTrainer):
         # Get metrics from config file
         # Epoch Metrics are used for training
         # Eval Metrics are used for validation
+        self.train_metrics = load_metric("mean_iou")
+        self.val_metrics = load_metric("mean_iou")
 
     def _train_epoch(self):
         """
@@ -57,7 +70,7 @@ class SegFormerTrainer(BaseTrainer):
         # Set model to train mode
         ######
         self.model.train()
-        self.epoch_metrics.reset()
+        # self.epoch_metrics.reset()
 
         # Iterate over the training data
         self.logger.debug(f"==> Start Training Epoch {self.current_epoch}/{self.epochs}, lr={self.optimizer.param_groups[0]['lr']:.6f} ")

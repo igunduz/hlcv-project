@@ -258,10 +258,10 @@ tb_logger = pl.loggers.TensorBoardLogger(log_dir)
 segformer_b0_feature_extractor = SegformerFeatureExtractor.from_pretrained("nvidia/segformer-b0-finetuned-ade-512-512")
 # segformer_b0_feature_extractor = SegformerFeatureExtractor.from_pretrained("nvidia/mit-b0")
 segformer_b0_feature_extractor.reduce_labels = True
-segformer_b0_feature_extractor.size = 600
+segformer_b0_feature_extractor.size = 400
 
 
-transform = Compose([Resize((600,600)),
+transform = Compose([Resize((400,400)),
                      ToTensor()])
 
 # example_dataset = AffordanceDataset(root_dir=data_dir,
@@ -285,12 +285,12 @@ test_dataset = AffordanceDataset(root_dir=data_dir,
                                 feature_extractor=segformer_b0_feature_extractor,
                                 transform=transform)
 
-batch_size = 32
+batch_size = 16
 
 # example_loader = DataLoader(example_dataset, batch_size=batch_size, shuffle=True, num_workers=2) #, collate_fn=collate_fn)
 train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=4)
-validation_loader = DataLoader(validation_dataset, batch_size=batch_size, shuffle=True, num_workers=4) #, collate_fn=collate_fn)
-test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=True, num_workers=4) #, collate_fn=collate_fn)
+validation_loader = DataLoader(validation_dataset, batch_size=batch_size, num_workers=4) #, collate_fn=collate_fn)
+test_loader = DataLoader(test_dataset, batch_size=batch_size, num_workers=4) #, collate_fn=collate_fn)
 
 # %%
 
@@ -313,7 +313,7 @@ segformer_finetuner = SegformerFinetuner(
 early_stop_callback = EarlyStopping(
     monitor="val_loss", 
     min_delta=0.00, 
-    patience=3, 
+    patience=10, 
     verbose=False, 
     mode="min",
 )
@@ -324,7 +324,7 @@ trainer = pl.Trainer(
     accelerator="gpu",
     logger=tb_logger,
     callbacks=[early_stop_callback, checkpoint_callback],
-    max_epochs=5,
+    max_epochs=50,
     val_check_interval=len(validation_loader),
 )
 

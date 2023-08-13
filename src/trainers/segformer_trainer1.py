@@ -43,6 +43,16 @@ class SegformerFinetuner(pl.LightningModule):
         self.train_mean_iou = load_metric("mean_iou")
         self.val_mean_iou = load_metric("mean_iou")
         self.test_mean_iou = load_metric("mean_iou")
+
+        n_gpu = torch.cuda.device_count()
+        if n_gpu == 0:
+            print("Warning: There\'s no GPU available on this machine,"
+                "training will be performed on CPU.")
+        self._device = torch.device('cuda:0' if n_gpu > 0 else 'cpu')
+        self._device_ids = list(range(n_gpu))
+        self.model.to(self._device)
+        if len(self._device_ids) > 1:
+            self.model = torch.nn.DataParallel(self.model, device_ids=self._device_ids)
         
     def forward(self, images, masks):
         outputs = self.model(pixel_values=images, labels=masks)
@@ -111,7 +121,7 @@ class SegformerFinetuner(pl.LightningModule):
             references=masks.detach().cpu().numpy()
         )
 
-        self.validation_step_outputs.append(loss)
+        self.validation_step_outputs.append({'val_loss': loss})
         
         return({'val_loss': loss})
     
