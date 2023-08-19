@@ -1,11 +1,9 @@
 import pytorch_lightning as pl
-from transformers import SegformerForSemanticSegmentation
+from transformers import SegformerForSemanticSegmentation, SegformerForImageClassification
 from datasets import load_metric
 from utils.parse_batch import parse_encoded_input, parse_object_labels
-
 import torch
 from torch import nn
-
 import numpy as np
 
 # Referred to https://blog.roboflow.com/how-to-train-segformer-on-a-custom-dataset-with-pytorch-lightning/#create-a-dataset
@@ -14,6 +12,8 @@ class SegformerFinetuner(pl.LightningModule):
     
     def __init__(self, id2label, train_dataloader=None, val_dataloader=None, test_dataloader=None, metrics_interval=100):
         super(SegformerFinetuner, self).__init__()
+        # Initialize the object classification model 
+        self.object_classification_model = SegformerForImageClassification.from_pretrained("nvidia/mit-b0")
         self.id2label = id2label
         self.metrics_interval = metrics_interval
         self.train_dl = train_dataloader
@@ -55,47 +55,64 @@ class SegformerFinetuner(pl.LightningModule):
             self.model = torch.nn.DataParallel(self.model, device_ids=self._device_ids)
         
     def forward(self, images, masks):
-        outputs = self.model(pixel_values=images, labels=masks)
-        return(outputs)
+        affordance_logits = self.model(pixel_values=images, labels=masks)
+        object_classification_logits = self.object_classification_model(images)
+        return affordance_logits, object_classification_logits
     
     def training_step(self, batch, batch_nb):
         torch.cuda.empty_cache()
         
         images, masks = batch['pixel_values'], batch['labels']
+        object_labels = batch['object_labels']
+        affordance_logits, object_classification_logits = self(images, masks)
         
-        outputs = self(images, masks)
+        # Compute affordance segmentation loss
+        affordance_loss = nn.CrossEntropyLoss()(affordance_logits, masks)
         
-        loss, logits = outputs[0], outputs[1]
+        # Compute object classification loss
+        object_classification_loss = nn.CrossEntropyLoss()(object_classification_logits, object_labels)
         
-        upsampled_logits = nn.functional.interpolate(
-            logits, 
+        # Combine the two losses
+        total_loss = affordance_loss + object_classification_loss
+        
+        # Perform backpropagation
+        total_loss.backward()
+        self.optimizer.step()
+        self.optimizer.zero_grad()
+        
+        upsampled_affordance_logits = nn.functional.interpolate(
+            affordance_logits, 
             size=masks.shape[-2:], 
             mode="bilinear", 
             align_corners=False
         )
 
-        predicted = upsampled_logits.argmax(dim=1)
+        predicted_affordance = upsampled_affordance_logits.argmax(dim=1)
 
         self.train_mean_iou.add_batch(
-            predictions=predicted.detach().cpu().numpy(), 
+            predictions=predicted_affordance.detach().cpu().numpy(), 
             references=masks.detach().cpu().numpy()
         )
         if batch_nb % self.metrics_interval == 0:
 
-            metrics = self.train_mean_iou.compute(
+            metrics_affordance = self.train_mean_iou.compute(
                 num_labels=self.num_classes, 
                 ignore_index=255, 
                 reduce_labels=False,
             )
             
-            metrics = {'loss': loss, "mean_iou": metrics["mean_iou"], "mean_accuracy": metrics["mean_accuracy"]}
+            metrics_affordance = {'affordance_mean_iou': metrics_affordance["mean_iou"], 'affordance_mean_accuracy': metrics_affordance["mean_accuracy"]}
             
-            for k,v in metrics.items():
+            for k,v in metrics_affordance.items():
                 self.log(k,v)
-            
-            return(metrics)
-        else:
-            return({'loss': loss})
+                
+        # Calculate metrics for object classification
+        predicted_object_class = object_classification_logits.argmax(dim=1)
+        accuracy_object_class = torch.sum(predicted_object_class == object_labels).item() / object_labels.size(0)
+        
+        self.log('object_classification_accuracy', accuracy_object_class)
+        
+        return {'loss': total_loss}
     
     def validation_step(self, batch, batch_nb):
     # def validation_step(self, batch):

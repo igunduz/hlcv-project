@@ -84,9 +84,7 @@ def parse_affordance_labels(affordance_filename):
 
     # Experimenting with Affordance pixel grid
     affordance_pixels = torch.from_numpy(affordance_pixels).reshape(dim1, dim2)
-    # affordance_pixels_normalized = affordance_pixels / 10.0
-    # affordance_pixels_normalized = transforms.ToPILImage()(affordance_pixels)
-    logger.info(f"Shape of affordance_pixels: {affordance_pixels.shape}")
+    # logger.info(f"Shape of affordance_pixels: {affordance_pixels.shape}")
 
     # Convert the normalized 3D NumPy array to a PIL image
     seg_map_img = transforms.ToPILImage()(seg_map_normalized)
@@ -144,14 +142,9 @@ class AffordanceDataset(Dataset):
 
         # Extract features if feature_extractor is provided
         if self.feature_extractor is not None:
-            # logger.info(f"Shape of image: {pil_image.size}")
-            # logger.info(f"Shape of affordance_labels: {affordance_labels.size}")
             encoded_inputs = self.feature_extractor(pil_image, affordance_labels, return_tensors="pt")
-            logger.info(f"Encoded mask: {encoded_inputs['labels'].shape}")
             for k,v in encoded_inputs.items():
-                # logger.info(f"Shape of {k}: {v.shape}")
                 encoded_inputs[k].squeeze_()
-                logger.info(f"Shape of {k}: {v.shape}")
         
         
         # return {"image": tensor_image, "affordance_rgb": affordance_rgb, "object_labels": object_labels, "encoded_input": encoded_inputs}

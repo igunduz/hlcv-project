@@ -6,6 +6,10 @@ __pycache__/
 # C extensions
 *.so
 data/
+saved/
+src/notebooks/docker_stderror
+src/notebooks/execute.sh
+src/notebooks/pytorch_docker.sub
 
 # Distribution / packaging
 irem.sbatch

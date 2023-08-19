@@ -1,0 +1,50 @@
+{
+    "name": "IITAFF_Segformer",
+    "n_gpu": 1,
+    "optimizer": {
+        "type": "Adam",
+        "args":{
+            "lr": 1e-3,
+            "weight_decay": 5e-5
+        }
+    },
+    "loss": "cce_loss",
+    "metrics": [
+        {
+            "type": "TopKAccuracy",
+            "args":{
+                "k": 1
+            }
+        },
+        {
+            "type": "TopKAccuracy",
+            "args":{
+                "k": 5
+            }
+        }
+    ],
+    "lr_scheduler": {
+        "type": "StepLR",
+        "args": {
+            "step_size": 25,
+            "gamma": 0.5
+        }
+    },
+    "trainer": {
+        "type": "SegformerTrainer",
+        "args": {},
+
+        "epochs": 10,
+        
+        "save_dir": "saved",
+        "save_period": 10,
+        "eval_period": 1,
+        "verbosity": 2,
+
+        "monitor": "max eval_top1",
+        "early_stop": 3
+    },
+    "tensorboard": true,
+    "wandb": true
+
+}
