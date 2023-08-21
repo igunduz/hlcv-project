@@ -56,6 +56,7 @@ from data_loaders.AffordanceDataset import AffordanceDataset
 from torch.utils.data import DataLoader
 from torchvision import transforms
 from torchvision.transforms import ToTensor, Normalize, Compose, Resize
+from torch.utils.data import Subset
 
 
 
@@ -285,19 +286,35 @@ test_dataset = AffordanceDataset(root_dir=data_dir,
                                 feature_extractor=segformer_b0_feature_extractor,
                                 transform=transform)
 
-batch_size = 16
+#subset the dataset
+#subset_indices = range(1)
+# Calculate the number of samples to use for 1% subset
+train_subset_size = len(train_dataset) // 100
+validation_subset_size = len(validation_dataset) // 100
+test_subset_size = len(test_dataset) // 100
+
+# Create subsets indices for each dataset
+train_subset_indices = range(train_subset_size)
+validation_subset_indices = range(validation_subset_size)
+test_subset_indices = range(test_subset_size)
+
+# Create subsets for each dataset
+train_subset = Subset(train_dataset, train_subset_indices)
+validation_subset = Subset(validation_dataset, validation_subset_indices)
+test_subset = Subset(test_dataset, test_subset_indices)
+batch_size = 32
 
 # example_loader = DataLoader(example_dataset, batch_size=batch_size, shuffle=True, num_workers=2) #, collate_fn=collate_fn)
-train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=4)
-validation_loader = DataLoader(validation_dataset, batch_size=batch_size, num_workers=4) #, collate_fn=collate_fn)
-test_loader = DataLoader(test_dataset, batch_size=batch_size, num_workers=4) #, collate_fn=collate_fn)
+train_loader = DataLoader(train_subset, batch_size=batch_size, shuffle=True, num_workers=4)
+validation_loader = DataLoader(validation_subset, batch_size=batch_size, num_workers=4) #, collate_fn=collate_fn)
+test_loader = DataLoader(test_subset, batch_size=batch_size, num_workers=4) #, collate_fn=collate_fn)
 
 # %%
 
 torch.cuda.empty_cache()
 
 # %%
-from trainers.segformer_trainer1 import SegformerFinetuner
+from trainers.segformer_trainer_updated import SegformerFinetuner
 
 
 segformer_finetuner = SegformerFinetuner(
@@ -318,10 +335,14 @@ early_stop_callback = EarlyStopping(
     mode="min",
 )
 
-checkpoint_callback = ModelCheckpoint(save_top_k=1, monitor="val_loss")
+checkpoint_callback = ModelCheckpoint(
+     dirpath="/home/hlcv_team002/hlcv-project/saved/model/checkpoints/",
+     filename="model-{epoch:02d}-{val_loss:.2f}",
+     save_top_k=1,
+     monitor="val_loss")
 
 trainer = pl.Trainer(
-    accelerator="gpu",
+    accelerator="cuda",
     logger=tb_logger,
     callbacks=[early_stop_callback, checkpoint_callback],
     max_epochs=50,

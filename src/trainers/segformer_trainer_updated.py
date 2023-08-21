@@ -19,7 +19,7 @@ class SegformerFinetuner(pl.LightningModule):
         self.train_dl = train_dataloader
         self.val_dl = val_dataloader
         self.test_dl = test_dataloader
-        
+        self.test_outputs = []  # Initialize test_outputs here
         self.num_classes = len(self.id2label.keys())
         self.label2id = {v:k for k,v in self.id2label.items()}
 
@@ -166,17 +166,26 @@ class SegformerFinetuner(pl.LightningModule):
             predictions=predicted.detach().cpu().numpy(), 
             references=masks.detach().cpu().numpy()
         )
-            
+        self.test_outputs.append({
+            "test_loss": loss,
+            "predictions": predicted.detach().cpu().numpy(),
+            "references": masks.detach().cpu().numpy()
+        })
         return({'test_loss': loss})
     
-    def test_epoch_end(self, outputs):
+    def on_test_epoch_end(self):
+        # Calculate metrics using the saved test outputs
+        predictions = np.concatenate([output["predictions"] for output in self.test_outputs])
+        references = np.concatenate([output["references"] for output in self.test_outputs])
+        self.test_mean_iou.add_batch(predictions=predictions, references=references)
+        
         metrics = self.test_mean_iou.compute(
-              num_labels=self.num_classes, 
-              ignore_index=255, 
-              reduce_labels=False,
-          )
+            num_labels=self.num_classes,
+            ignore_index=255,
+            reduce_labels=False,
+        )
        
-        avg_test_loss = torch.stack([x["test_loss"] for x in outputs]).mean()
+        avg_test_loss = torch.stack([x["test_loss"] for x in self.test_outputs]).mean()
         test_mean_iou = metrics["mean_iou"]
         test_mean_accuracy = metrics["mean_accuracy"]
 
@@ -184,7 +193,7 @@ class SegformerFinetuner(pl.LightningModule):
         
         for k,v in metrics.items():
             self.log(k,v)
-        
+        self.test_outputs.clear()
         return metrics
     
     def configure_optimizers(self):
